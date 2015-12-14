@@ -1,0 +1,14 @@
+[{
+	"pid": "45570ec1-2e8b-4390-ad06-1d1505a5da7d",
+	"tags": ["photonode"],
+	"photographer": "C E",
+	"uid": "22194733",
+	"title": "GIF",
+	"published": "2015-08-14T19:40:24.294Z",
+	"image": "./api/image/demoimage.svg",
+	"thumbnail": "./api/image/thumbnail?renditionKind=largeview",
+	"likes": 0,
+	"shares": 2,
+	"lid": "f35998a3-d260-446e-8c3c-8da82ee77aed",
+	"summary": "A GIF"
+}]

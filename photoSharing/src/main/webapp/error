@@ -1,0 +1,16 @@
+<html>
+<head>
+</head>
+
+<body>
+
+<h1>Error! </h1>
+<p>Mess = <%= message %></p>
+<p>Erro = <%= error %></p>
+
+
+
+
+</body>
+
+</html>
