@@ -58,9 +58,11 @@ public class LogoutDefinition implements APIDefinition {
 		String api = "https://" + Configuration.getConfigurationValue(Configuration.SERVER) + apiUrl;
 		try{
 			//Invalidating photosharing session on the AppServer and IBM Connections Cloud
-			HttpSession session = request.getSession();
+			HttpSession session = request.getSession(false);
+			
 			if(session != null){
-				//
+				System.out.println(session.getId());
+				
 				Request get = Request.Get(api);
 				
 				try {
@@ -84,19 +86,21 @@ public class LogoutDefinition implements APIDefinition {
 					response.setStatus(500);
 				} 
 				
-				//Indvalidates the User's current session
+				//Indvalidates the User's current session and logs them out
 				session.invalidate();
-				
+				request.logout();
+								
 				//Sets the Status to SC_OK (Http Status Code 200) to indicate a successful logout
-				response.setStatus(HttpStatus.SC_OK);
+				response.setStatus(HttpStatus.SC_NO_CONTENT);
 			}
 			else{ 
 				//Something bad has happened
 				logger.log(Level.SEVERE,"Invalid Request");
+				response.setStatus(HttpStatus.SC_BAD_REQUEST);
 			}
 			
 		}catch(Exception e){
-			logger.log(Level.SEVERE,"Exception Encountered");
+			logger.log(Level.SEVERE,"Exception Encountered - " + e.toString());
 			
 			//Sets the Status to SC_INTERNAL_SERVER_ERROR (Http Status Code 500)
 			//Indicates an issue with the Server
