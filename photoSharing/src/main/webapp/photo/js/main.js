@@ -117,15 +117,15 @@ photoApp.controller('NavigationButtonController', function($location, $scope, $r
 		$(button).css("animation", "navSelected .5s forwards");
 		
 		if(button === ".personalButton"){
-			console.log("Private Button Clicked");
+			$log.log("Private Button Clicked");
 		} else if(button === ".publicButton"){
-			console.log("Public Button Clicked");
+			$log.log("Public Button Clicked");
 		}else if(button === ".profileButton"){
-			console.log("Profile Button Clicked");
+			$log.log("Profile Button Clicked");
 		}else if(button === ".privateButton"){
-			console.log("Messages Button Clicked");
+			$log.log("Messages Button Clicked");
 		}else{
-			console.log("NavigationButtonController: invalid click with " + button);
+			$log.log("NavigationButtonController: invalid click with " + button);
 		}
 		
 	};
@@ -149,7 +149,7 @@ photoApp.controller('UploadController', function($location, $scope, $rootScope,
 	
 	//Logs in the User
 	$scope.openUploadDialog = function(){
-		console.log("open dialog for upload photo");
+		$log.log("open dialog for upload photo");
 		
 	};
 		
@@ -162,16 +162,16 @@ photoApp.controller('SearchController', function($location, $scope, $rootScope,
 		$http, $route, $routeParams, $cookies, $uibModal, $log, $window) {
 	
 	$scope.peopleSearch = function(){
-		console.log("People Search");
+		$log.log("People Search");
 		
 	};
 	
 	$scope.search = function(){
-		console.log("Search");
+		$log.log("Search");
 	};
 	
 	$scope.goToProfile = function(id){
-		console.log("Moving to profile " + id);
+		$log.log("Moving to profile " + id);
 	};
 	
 	/**
@@ -179,7 +179,7 @@ photoApp.controller('SearchController', function($location, $scope, $rootScope,
 	 */
 	$scope.$watch('loggedin', function(){
 		if(!$rootScope.loggedin){
-			console.log("changed logged in status to logged out");
+			$log.log("changed logged in status to logged out");
 			$scope.searchQuery = null;
 		}
 	});
@@ -187,32 +187,33 @@ photoApp.controller('SearchController', function($location, $scope, $rootScope,
 });
 
 /**
- * Manages 
+ * Manages the Modal Dialog for login 
  */
-photoApp.controller('LoginModalDialogController', function($location, $scope, $rootScope,
-		$http, $route, $routeParams, $cookies, $uibModal, $log, $window) {
-	 $scope.items = ['item1', 'item2', 'item3'];
-
+photoApp.controller('LoginModalDialogController', function($scope, $rootScope, $uibModal, $log) {
 	  $scope.animationsEnabled = true;
 
 	  /**
 	   * launches the loginDialog when the loginDialog value changes 
 	   */
 	  $scope.$watch('loginDialog', function(){
-		
+		  $log.info("login dialog status changed");
+		  
+		  //Create the Modal Instance
 		  var modalInstance = $uibModal.open({
 		      animation: $scope.animationsEnabled,
-		      templateUrl: './views/login-template.html',
+		      templateUrl: './templates/login-template.html',
 		      controller: 'ModalInstanceController',
-		      size: sm,
-		      
+		      size: 'sm',
+		      resolve:{
+		    	  
+		      }
 		    });
-
-		    modalInstance.result.then(function (selectedItem) {
-		      $scope.selected = selectedItem;
-		    }, function () {
-		      $log.info('Modal dismissed at: ' + new Date());
-		    });
+		  
+		  	modalInstance.result.then(function (selectedItem){
+		  		$log.info("loggin");
+		  	}, function(){
+		  		$log.info('modal dialog dismissed at: ' + new Date());
+		  	});
 		  
 	  });
 	  
@@ -221,13 +222,13 @@ photoApp.controller('LoginModalDialogController', function($location, $scope, $r
 	  };
 });
 
-photoApp.controller('ModalInstanceController', function ($scope, $uibModalInstance, items) {
-	  $scope.selected = {
-	    item: $scope.items[0]
-	  };
-
+/**
+ * Actions for the Login Modal Dialog
+ */
+photoApp.controller('ModalInstanceController', function ($scope, $uibModalInstance) {
+	  
 	  $scope.ok = function () {
-	    $uibModalInstance.close($scope.selected.item);
+		$uibModalInstance.close('close');
 	  };
 
 	  $scope.cancel = function () {
