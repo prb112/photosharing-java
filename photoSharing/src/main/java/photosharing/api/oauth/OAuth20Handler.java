@@ -16,11 +16,14 @@
 package photosharing.api.oauth;
 
 /**
- * The API is described at: 
  * <a href="http://ibm.co/1WOTZni">OAuth 2.0 APIs for web server flow</a>
+ * @author Paul Bastide <pbastide@us.ibm.com> 
  */
 public class OAuth20Handler {
 	
+	/**
+	 * Only one instance of this class is needed. 
+	 */
 	private static OAuth20Handler _handler;
 	
 	/**
@@ -41,11 +44,18 @@ public class OAuth20Handler {
 		return _handler;
 	}
 	
-	
+	/**
+	 * 
+	 * @return
+	 */
 	public OAuth20Data getAccessToken(){
 		return new OAuth20Data();
 	}
 	
+	/**
+	 * 
+	 * @return
+	 */
 	public OAuth20Data renewAccessToken(){
 		return new OAuth20Data();
 	}
