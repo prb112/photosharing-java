@@ -28,7 +28,22 @@ photoApp.controller('NavbarController', function($location, $scope, $rootScope,
 		$http, $route, $routeParams, $cookies, $uibModal, $log, $window) {
 	
 	//Default State is not logged in, switch to true only during testing
-	$rootScope.loggedin = false;
+	
+	/*
+	 * Checks to see if there is a Session based on the LtpaToken2
+	 * If the cookie exists, the login is true, else false
+	 */
+	var cookie = $cookies.get('LtpaToken2');
+	$log.debug("Cookie Details: " + cookie);
+	if(cookie !== 'undefined'){
+		$rootScope.loggedin = true;
+	}else{
+		$rootScope.loggedin = false;
+	}
+	
+	
+	
+	
 	$rootScope.state = 'public';
 
 	$rootScope.loading = false;
@@ -99,13 +114,28 @@ photoApp.controller('NavigationButtonController', function($location, $scope, $r
 	
 	//Logs in the User
 	$scope.login = function(){
+		$log.debug("Logging in the User");
 		//if testing, $rootScope.loggedin = true;
+		$rootScope.loggedin = true;
 		$rootScope.loginDialog = true;
 	};
 	
 	//Logs out the User.  
 	$scope.logout = function(){
+		$log.debug("Logging out the User and destroying the server session")
 		$rootScope.loggedin = false;
+		
+		/**
+		 * Calls the Logout Method
+		 */
+		$http({
+			method: 'GET',
+			url: "../api/logout"
+		}).then(function success(response){
+			$log.debug($response);
+		}, function error(response){
+			$log.debug($response);
+		});
 	};
 	
 	//General Button Controller 

@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 import photosharing.api.base.APIDefinition;
 import photosharing.api.base.ImageDefinition;
 import photosharing.api.base.MockDefinition;
+import photosharing.api.bss.LoginDefinition;
 import photosharing.api.bss.LogoutDefinition;
 import photosharing.api.conx.CommentsDefinition;
 import photosharing.api.conx.ProfileDefinition;
@@ -37,6 +38,7 @@ public class ApiRegistry {
 	 */
 	static{
 		definitions.put("*", (APIDefinition)new MockDefinition());
+		definitions.put("/login", (APIDefinition) new LoginDefinition());
 		definitions.put("/logout", (APIDefinition) new LogoutDefinition());
 		definitions.put("/image*", (APIDefinition) new ImageDefinition());
 		definitions.put("/searchPeople", (APIDefinition) new SearchPeopleDefinition());

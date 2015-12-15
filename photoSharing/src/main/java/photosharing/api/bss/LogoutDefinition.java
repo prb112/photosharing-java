@@ -43,7 +43,6 @@ public class LogoutDefinition implements APIDefinition {
 	private static String className = LogoutDefinition.class.getName();
 	private Logger logger = Logger.getLogger(className);
 	
-
 	/**
 	 * The URL accepts a request with cookies, and invalidates those cookies (tokens)
 	 */
