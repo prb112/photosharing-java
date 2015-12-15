@@ -231,7 +231,7 @@ photoApp.controller('LoginModalDialogController', function($scope, $rootScope, $
 		  //Create the Modal Instance
 		  var modalInstance = $uibModal.open({
 		      animation: $scope.animationsEnabled,
-		      templateUrl: './templates/login-template.html',
+		      templateUrl: './templates/login-template.tpl',
 		      controller: 'ModalInstanceController',
 		      size: 'sm',
 		      resolve:{
