@@ -25,10 +25,10 @@ var photoApp = angular.module('photoApp', [ 'ngSanitize', 'ngRoute',
  * The controller for the Navigation Bar
  */
 photoApp.controller('NavbarController', function($location, $scope, $rootScope,
-		$http, $route, $routeParams, $cookies, $modal, $log, $window) {
+		$http, $route, $routeParams, $cookies, $uibModal, $log, $window) {
 	
-	//Default State is not logged in 
-	$rootScope.loggedin = true;
+	//Default State is not logged in, switch to true only during testing
+	$rootScope.loggedin = false;
 	$rootScope.state = 'public';
 
 	$rootScope.loading = false;
@@ -95,11 +95,11 @@ photoApp.controller('NavbarController', function($location, $scope, $rootScope,
  * Manages the navigation bar's buttons
  */
 photoApp.controller('NavigationButtonController', function($location, $scope, $rootScope,
-		$http, $route, $routeParams, $cookies, $modal, $log, $window) {
+		$http, $route, $routeParams, $cookies, $uibModal, $log, $window) {
 	
 	//Logs in the User
 	$scope.login = function(){
-		//$rootScope.loggedin = true;
+		//if testing, $rootScope.loggedin = true;
 		$rootScope.loginDialog = true;
 	};
 	
@@ -136,7 +136,7 @@ photoApp.controller('NavigationButtonController', function($location, $scope, $r
  * Manages the navigation bar upload
  */
 photoApp.controller('UploadController', function($location, $scope, $rootScope,
-		$http, $route, $routeParams, $cookies, $modal, $log, $window) {
+		$http, $route, $routeParams, $cookies, $uibModal, $log, $window) {
 	
 	//Changes the Selection 
 	$scope.select = function(button) {
@@ -159,7 +159,7 @@ photoApp.controller('UploadController', function($location, $scope, $rootScope,
  * Manages the navigation bar search
  */
 photoApp.controller('SearchController', function($location, $scope, $rootScope,
-		$http, $route, $routeParams, $cookies, $modal, $log, $window) {
+		$http, $route, $routeParams, $cookies, $uibModal, $log, $window) {
 	
 	$scope.peopleSearch = function(){
 		console.log("People Search");
@@ -190,7 +190,7 @@ photoApp.controller('SearchController', function($location, $scope, $rootScope,
  * Manages 
  */
 photoApp.controller('LoginModalDialogController', function($location, $scope, $rootScope,
-		$http, $route, $routeParams, $cookies, $modal, $log, $window) {
+		$http, $route, $routeParams, $cookies, $uibModal, $log, $window) {
 	 $scope.items = ['item1', 'item2', 'item3'];
 
 	  $scope.animationsEnabled = true;
@@ -202,14 +202,10 @@ photoApp.controller('LoginModalDialogController', function($location, $scope, $r
 		
 		  var modalInstance = $uibModal.open({
 		      animation: $scope.animationsEnabled,
-		      templateUrl: 'index.html',
-		      controller: 'ModalInstanceCtrl',
-		      size: size,
-		      resolve: {
-		        items: function () {
-		          return $scope.items;
-		        }
-		      }
+		      templateUrl: './views/login-template.html',
+		      controller: 'ModalInstanceController',
+		      size: sm,
+		      
 		    });
 
 		    modalInstance.result.then(function (selectedItem) {
@@ -225,9 +221,7 @@ photoApp.controller('LoginModalDialogController', function($location, $scope, $r
 	  };
 });
 
-photoApp.controller('ModalInstanceCtrl', function ($scope, $uibModalInstance, items) {
-
-	  $scope.items = items;
+photoApp.controller('ModalInstanceController', function ($scope, $uibModalInstance, items) {
 	  $scope.selected = {
 	    item: $scope.items[0]
 	  };

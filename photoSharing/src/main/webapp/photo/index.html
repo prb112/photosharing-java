@@ -11,7 +11,7 @@
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
- * implied. See the License for the specific language governing
+ * implied. See the License for the specific language governing 
  * permissions and limitations under the License.
 -->
 <html>
@@ -27,7 +27,7 @@
     	@import url(https://fonts.googleapis.com/css?family=Sue+Ellen+Francisco);
     	@import url(//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.4/css/bootstrap.css);
     	@import url(//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.0/justifiedGallery.css);
-    	@import url(./css/spinkit/spinkit.css);
+    	@import url(/photoSharing/css/spinkit/spinkit.css);
     	@import url(./css/style.css);
     </style>
 
@@ -47,7 +47,8 @@
   <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0-alpha1/jquery.js"></script>
 
   <!-- Bootstrap Javascript -->
-  <script src="//cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.13.3/ui-bootstrap.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.14.3/ui-bootstrap.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.14.3/ui-bootstrap-tpls.js"></script>
   <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.4/js/bootstrap.js"></script>
 
   <!-- Justified-Gallery -->
@@ -175,25 +176,7 @@
     </div>
 </nav>
 
-<div ng-controller="LoginModalDialogController">
-<script type="text/ng-template" id="loginDialog">
- <div class="modal-header">
-            <h3 class="modal-title">I'm a modal!</h3>
-        </div>
-        <div class="modal-body">
-            <ul>
-                <li ng-repeat="item in items">
-                    <a href="#" ng-click="$event.preventDefault(); selected.item = item">{{ item }}</a>
-                </li>
-            </ul>
-            Selected: <b>{{ selected.item }}</b>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-primary" type="button" ng-click="login()">Login</button>
-            <button class="btn btn-warning" type="button" ng-click="cancel()">Cancel</button>
-        </div>
-</script>
-</div>
+	
 
 </body>
 </html>
