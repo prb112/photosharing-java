@@ -29,7 +29,7 @@ import photosharing.api.Configuration;
 public class OAuth20Handler {
 
 	// Logger
-	private final static String className = CallbackDefinition.class.getName();
+	private final static String className = OAuth20Handler.class.getName();
 	private Logger logger = Logger.getLogger(className);
 
 	/**

@@ -1,5 +1,17 @@
 /**
- * 
+ * © Copyright IBM Corp. 2015
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at:
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * permissions and limitations under the License.
  */
 package photosharing.api;
 
@@ -67,11 +79,13 @@ public class ApiRegistry {
 	public static APIDefinition getRegistry(String uri){
 		APIDefinition defintion = definitions.get(uri);
 		
+		//If no API exists, it returns a MockAPI
 		if(defintion == null){
 			defintion = definitions.get("*");
 		}
 		
-		logger.info(defintion.getClass().getName());
+		//Logs out the Class Name, if Finest is set
+		logger.finest(defintion.getClass().getName());
 		
 		if(uri.contains("/image/")){
 			defintion = definitions.get("/image*");

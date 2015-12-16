@@ -21,7 +21,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import photosharing.api.base.APIDefinition;
-import photosharing.api.bss.LogoutDefinition;
 
 /**
  * Manages redirect to the OAuth URL
@@ -31,7 +30,7 @@ import photosharing.api.bss.LogoutDefinition;
 public class OAuthDefinition implements APIDefinition {
 
 	// Logger 
-	private static String className = LogoutDefinition.class.getName();
+	private static String className = OAuthDefinition.class.getName();
 	private Logger logger = Logger.getLogger(className);
 			
 	/**

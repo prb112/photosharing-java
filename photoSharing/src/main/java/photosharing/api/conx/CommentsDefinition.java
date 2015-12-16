@@ -36,7 +36,6 @@ import org.xml.sax.SAXException;
 
 import photosharing.api.Configuration;
 import photosharing.api.base.APIDefinition;
-import photosharing.api.bss.LogoutDefinition;
 import photosharing.api.oauth.OAuth20Data;
 
 /**
@@ -49,7 +48,7 @@ import photosharing.api.oauth.OAuth20Data;
 public class CommentsDefinition implements APIDefinition {
 
 	// Logger
-	private static String className = LogoutDefinition.class.getName();
+	private static String className = CommentsDefinition.class.getName();
 	private Logger logger = Logger.getLogger(className);
 
 	/**

@@ -35,7 +35,6 @@ import org.xml.sax.SAXException;
 
 import photosharing.api.Configuration;
 import photosharing.api.base.APIDefinition;
-import photosharing.api.oauth.CallbackDefinition;
 import photosharing.api.oauth.OAuth20Data;
 
 /**
@@ -48,7 +47,7 @@ import photosharing.api.oauth.OAuth20Data;
 public class ProfileDefinition implements APIDefinition {
 
 	// Logger
-	private final static String className = CallbackDefinition.class.getName();
+	private final static String className = ProfileDefinition.class.getName();
 	private Logger logger = Logger.getLogger(className);
 
 	/**

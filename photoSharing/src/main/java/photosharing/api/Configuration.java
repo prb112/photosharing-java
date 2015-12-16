@@ -23,8 +23,6 @@ import java.util.logging.Logger;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
-import photosharing.api.oauth.CallbackDefinition;
-
 /**
  * Manages the Configuration
  * @author Paul Bastide <pbastide@us.ibm.com>
@@ -32,7 +30,7 @@ import photosharing.api.oauth.CallbackDefinition;
 public class Configuration {
 	
 	// Logger
-	private final static String className = CallbackDefinition.class.getName();
+	private final static String className = Configuration.class.getName();
 	private Logger logger = Logger.getLogger(className);
 	
 	/**
