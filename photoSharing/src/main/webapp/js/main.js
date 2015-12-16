@@ -40,10 +40,7 @@ photoApp.controller('NavbarController', function($location, $scope, $rootScope,
 	}else{
 		$rootScope.loggedin = false;
 	}
-	
-	
-	
-	
+		
 	$rootScope.state = 'public';
 
 	$rootScope.loading = false;

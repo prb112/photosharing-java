@@ -24,7 +24,7 @@
 	<version>0.0.1-SNAPSHOT</version>
 
 	<name>photosharing-java</name>
-	<url>http://maven.apache.org</url>
+	<url>http://developer.ibm.com/social</url>
 	<!-- Added Specific Maven Repository where the REST Client is released. 
 		and Liberty -->
 	<repositories>
@@ -79,11 +79,6 @@
 			<scope>provided</scope>
 		</dependency>
 
-		<dependency>
-			<groupId>org.apache.oltu.oauth2</groupId>
-			<artifactId>org.apache.oltu.oauth2.client</artifactId>
-			<version>1.0.0</version>
-		</dependency>
 
 		<dependency>
 			<groupId>org.apache.commons</groupId>
@@ -116,4 +111,16 @@
 			
 		</plugins>
 	</build>
+	<description>This project provides a sample application that leverages the [IBM Connections Cloud APIs](https://developer.ibm.com/social/) to create a social photo sharing experience. The application can be deployed to IBM Bluemix or it can be deployed on it's own. 
+</description>
+	<organization>
+		<name>IBM Connections Developers</name>
+		<url>https://developer.ibm.com/social</url>
+	</organization>
+	<scm>
+		<url>https://github.com/ibmcnxdev/photosharing-java</url>
+	</scm>
+	<issueManagement>
+		<url>https://github.com/ibmcnxdev/photosharing-java</url>
+	</issueManagement>
 </project>
