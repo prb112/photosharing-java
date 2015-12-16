@@ -54,7 +54,8 @@ public class LogoutDefinition implements APIDefinition {
 	 * @see photosharing.api.conx.APIDefinition#run(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
 	 */
 	public void run(HttpServletRequest request, HttpServletResponse response) {
-		String api = "https://" + Configuration.getConfigurationValue(Configuration.SERVER) + apiUrl;
+		Configuration config = Configuration.getInstance(request);
+		String api = config.getValue(Configuration.BASEURL) + apiUrl;
 		try{
 			//Invalidating photosharing session on the AppServer and IBM Connections Cloud
 			HttpSession session = request.getSession(false);

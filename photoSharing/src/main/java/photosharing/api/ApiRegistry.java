@@ -9,7 +9,6 @@ import java.util.logging.Logger;
 import photosharing.api.base.APIDefinition;
 import photosharing.api.base.ImageDefinition;
 import photosharing.api.base.MockDefinition;
-import photosharing.api.bss.LoginDefinition;
 import photosharing.api.bss.LogoutDefinition;
 import photosharing.api.conx.CommentsDefinition;
 import photosharing.api.conx.ProfileDefinition;
@@ -18,6 +17,7 @@ import photosharing.api.conx.SearchPeopleDefinition;
 import photosharing.api.conx.SearchTagsDefinition;
 import photosharing.api.conx.UploadFileDefinition;
 import photosharing.api.oauth.CallbackDefinition;
+import photosharing.api.oauth.OAuthDefinition;
 
 /**
  * API Registry to isolate the how in each call 
@@ -38,7 +38,7 @@ public class ApiRegistry {
 	 */
 	static{
 		definitions.put("*", (APIDefinition)new MockDefinition());
-		definitions.put("/login", (APIDefinition) new LoginDefinition());
+		definitions.put("/auth", (APIDefinition) new OAuthDefinition());
 		definitions.put("/logout", (APIDefinition) new LogoutDefinition());
 		definitions.put("/image*", (APIDefinition) new ImageDefinition());
 		definitions.put("/searchPeople", (APIDefinition) new SearchPeopleDefinition());

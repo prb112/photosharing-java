@@ -13,40 +13,41 @@
  * implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package photosharing.api.bss;
+package photosharing.api.oauth;
 
 import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 import photosharing.api.base.APIDefinition;
+import photosharing.api.bss.LogoutDefinition;
 
 /**
- * Manages the login to the Application OAuth Application
+ * Manages redirect to the OAuth URL
  * 
  * @author Paul Bastide <pbastide@us.ibm.com>
  */
-public class LoginDefinition implements APIDefinition {
+public class OAuthDefinition implements APIDefinition {
 
 	// Logger 
 	private static String className = LogoutDefinition.class.getName();
 	private Logger logger = Logger.getLogger(className);
 			
 	/**
-	 * runs the login
+	 * initiates the OAuth Flow
 	 */
 	@Override
 	public void run(HttpServletRequest request, HttpServletResponse response) {
-		//Creates a Session for the Given User
-		//The session is going to stash the OAuth20Data
-		//The OAuth20Data is best stashed in a database or map
-		HttpSession session = request.getSession(true);
+				
+		OAuth20Handler handler = OAuth20Handler.getInstance();
+		String redirect = handler.generateRedirect(request);
 		
-		
-		
-		
+		try{
+			response.sendRedirect(redirect);
+		}catch(Exception e){
+			logger.severe("Issue with redirect to Auth URL");
+		}
 		
 	}
 
