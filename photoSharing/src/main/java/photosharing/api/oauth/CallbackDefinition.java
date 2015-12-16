@@ -54,12 +54,13 @@ public class CallbackDefinition implements APIDefinition {
 	 *            the http response object
 	 */
 	public void run(HttpServletRequest request, HttpServletResponse response) {
+		
 		// Checks the Referrer Header and enables processing based on the valid
 		// header - it's not used for validation, rather invalidation, and aligns
 		// with the best practices described in http://stackoverflow.com/questions/8319862/can-i-rely-on-referer-http-header
+		Configuration config = Configuration.getInstance(request);
+		String server = config.getValue(Configuration.HOSTNAME);
 		
-		String server = Configuration
-				.getConfigurationValue(Configuration.SERVER);
 		String referrer = request.getHeader("Referer");
 		if (server != null && referrer != null
 				&& referrer.compareTo(server) == 0) {

@@ -38,4 +38,9 @@
 		<auth-method>BASIC</auth-method>
 		<realm-name>photosharing</realm-name>
 	</login-config>
+	<context-param>
+		<description>The Application Configuration that stores the properties needed to access IBM Connections Cloud</description>
+		<param-name>AppConfig</param-name>
+		<param-value>/WEB-INF/appconfig.properties</param-value>
+	</context-param>
 </web-app>

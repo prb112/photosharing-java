@@ -16,7 +16,6 @@
 package photosharing.api.oauth;
 
 import java.io.Serializable;
-import java.net.URLDecoder;
 import java.util.HashMap;
 
 /**
@@ -32,6 +31,11 @@ import java.util.HashMap;
  * 
  */
 public class OAuth20Data implements Serializable {
+
+	/**
+	 * generated serial version id
+	 */
+	private static final long serialVersionUID = 7528264765427082943L;
 
 	// access_token The access token that is used as a bearer token to access
 	// the protected resource, and is valid for two hours from time it is
