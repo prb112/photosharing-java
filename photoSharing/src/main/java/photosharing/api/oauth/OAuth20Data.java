@@ -16,6 +16,8 @@
 package photosharing.api.oauth;
 
 import java.io.Serializable;
+import java.net.URLDecoder;
+import java.util.HashMap;
 
 /**
  * OAuth20Data is a serializable class which stores the OAuth Data
@@ -79,8 +81,29 @@ public class OAuth20Data implements Serializable {
 		this.expires_in = expires_in;
 		this.token_type = token_type;
 	}
-
 	
+	/**
+	 * creates a new object representing OAuth20Data from the responseData
+	 * @param responseData
+	 * @return a new instance of OAuth20Data
+	 */
+	public static OAuth20Data createInstance(String responseData){
+		String[] params = responseData.split("&");
+		
+		// Build a temp map to avoid repeated if calls
+		HashMap<String,String> paramMap = new HashMap<String,String>();
+		for(String param : params){
+			String[] paramValue = param.split("=");
+			paramMap.put(paramValue[0],paramValue[1]);
+		}
+		
+		// Creates a new instance
+		OAuth20Data oData = new OAuth20Data(paramMap.get("access_token"), paramMap.get("refresh_token"),
+				paramMap.get("issued_on"), paramMap.get("expires_in"), paramMap.get("token_type"));
+		
+		return oData;
+	}
+
 	/**
 	 * @return the access token which is valid for 2 hours
 	 */
