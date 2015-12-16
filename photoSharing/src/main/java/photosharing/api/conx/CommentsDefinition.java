@@ -5,6 +5,7 @@ package photosharing.api.conx;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.logging.Logger;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
@@ -23,28 +24,32 @@ import org.xml.sax.SAXException;
 
 import photosharing.api.Configuration;
 import photosharing.api.base.APIDefinition;
-import photosharing.api.user.UserSession;
+import photosharing.api.bss.LogoutDefinition;
+import photosharing.api.oauth.OAuth20Data;
 
 /**
  * The class calls the API for a File Comments in IBM Connections <a
  * href="">File Comments API</a>
  * 
  * @author Paul Bastide <pbastide@us.ibm.com>
- *
+ * 
  */
 public class CommentsDefinition implements APIDefinition {
+
+	// Logger
+	private static String className = LogoutDefinition.class.getName();
+	private Logger logger = Logger.getLogger(className);
 
 	/**
 	 * generate the base api url for files
 	 * 
 	 * @param userid
-	 * @return
+	 * @return url representing the api
 	 */
 	private String getApiUrl() {
-		String server = Configuration
-				.getConfigurationValue(Configuration.SERVER);
+		Configuration config = Configuration.getInstance(null);
 		StringBuilder builder = new StringBuilder();
-		builder.append(server);
+		builder.append(config.getValue(Configuration.BASEURL));
 		builder.append("/files/oauth/api");
 		return builder.toString();
 	}
@@ -53,7 +58,7 @@ public class CommentsDefinition implements APIDefinition {
 	 * creates the formatted comment
 	 * 
 	 * @param content
-	 * @return
+	 * @return xml representing a comment
 	 */
 	private String generateComment(String content) {
 		StringBuilder builder = new StringBuilder();
@@ -62,34 +67,34 @@ public class CommentsDefinition implements APIDefinition {
 		builder.append("</content></entry>");
 		return builder.toString();
 	}
-	
+
 	/**
-	 * gets the nonce url 
-	 * <a href="http://ibm.co/1fG83gY">Get a Cryptographic Key</a>
-	 * @return
+	 * gets the nonce url <a href="http://ibm.co/1fG83gY">Get a Cryptographic
+	 * Key</a>
+	 * 
+	 * @return URL to get Nonce
 	 */
-	private String getNonceUrl(){
-		String server = Configuration
-				.getConfigurationValue(Configuration.SERVER);
+	private String getNonceUrl() {
+		Configuration config = Configuration.getInstance(null);
 		StringBuilder builder = new StringBuilder();
-		builder.append("https://");
-		builder.append(server);
+		builder.append(config.getValue(Configuration.BASEURL));
 		builder.append("/files/oauth/api/nonce");
 		return builder.toString();
 	}
-	
+
 	/**
-	 * get nonce as described with nonce
-	 * <a href="http://ibm.co/1fG83gY">Get a Cryptographic Key</a>
+	 * get nonce as described with nonce <a href="http://ibm.co/1fG83gY">Get a
+	 * Cryptographic Key</a>
+	 * 
 	 * @param bearer
 	 */
-	private String getNonce(String bearer, HttpServletResponse response){
+	private String getNonce(String bearer, HttpServletResponse response) {
 		String nonce = "";
-		
-		//Build the Request
+
+		// Build the Request
 		Request get = Request.Get(getNonceUrl());
 		get.addHeader("Authorization", "Bearer " + bearer);
-		
+
 		try {
 			Response apiResponse = get.execute();
 			HttpResponse hr = apiResponse.returnResponse();
@@ -108,24 +113,24 @@ public class CommentsDefinition implements APIDefinition {
 			else if (code == 401) {
 				response.setStatus(401);
 			}
-			
+
 			else if (code == 200) {
 				InputStream in = hr.getEntity().getContent();
 				nonce = IOUtils.toString(in);
 			}
-						
+
 		} catch (IOException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
 			response.setStatus(500);
-			e.printStackTrace();
-		} 
-		
+			logger.severe("Issue with get nonce " + e.toString());
+		}
+
 		return nonce;
 	}
-	
+
 	/**
-	 * deletes a comment with the given comments api url 
-	 * uses the HTTP method delete 
+	 * deletes a comment with the given comments api url uses the HTTP method
+	 * delete
 	 * 
 	 * @param bearer
 	 * @param cid
@@ -134,12 +139,14 @@ public class CommentsDefinition implements APIDefinition {
 	 * @param response
 	 * @param nonce
 	 */
-	public void deleteComment(String bearer, String cid, String pid, String uid, HttpServletResponse response, String nonce){
-		String apiUrl = getApiUrl() + "/userlibrary/" + uid + "/document/" + pid + "/comment/" + cid + "/entry";
-		
+	public void deleteComment(String bearer, String cid, String pid,
+			String uid, HttpServletResponse response, String nonce) {
+		String apiUrl = getApiUrl() + "/userlibrary/" + uid + "/document/"
+				+ pid + "/comment/" + cid + "/entry";
+
 		Request delete = Request.Delete(apiUrl);
 		delete.addHeader("Authorization", "Bearer " + bearer);
-		delete.addHeader("X-Update-Nonce",nonce);
+		delete.addHeader("X-Update-Nonce", nonce);
 
 		try {
 			Response apiResponse = delete.execute();
@@ -161,20 +168,20 @@ public class CommentsDefinition implements APIDefinition {
 			}
 
 			// Default to 200
-			else{
+			else {
 				response.setStatus(200);
 			}
 
 		} catch (IOException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
 			response.setStatus(500);
-			e.printStackTrace();
-		} 
+			logger.severe("Issue with delete comment" + e.toString());
+		}
 
 	}
 
 	/**
-	 * updates a given comment 
+	 * updates a given comment
 	 * 
 	 * @param bearer
 	 * @param cid
@@ -184,22 +191,25 @@ public class CommentsDefinition implements APIDefinition {
 	 * @param nonce
 	 * @param response
 	 */
-	public void updateComment(String bearer, String cid, String pid, String uid, String body, String nonce, HttpServletResponse response){
-		String apiUrl = getApiUrl() + "/userlibrary/" + uid + "/document/" + pid + "/comment/" + cid + "/entry";
-		
+	public void updateComment(String bearer, String cid, String pid,
+			String uid, String body, String nonce, HttpServletResponse response) {
+		String apiUrl = getApiUrl() + "/userlibrary/" + uid + "/document/"
+				+ pid + "/comment/" + cid + "/entry";
+
 		String comment = generateComment(body);
-		
-		// Generate the 
+
+		// Generate the
 		Request put = Request.Put(apiUrl);
 		put.addHeader("Authorization", "Bearer " + bearer);
-		put.addHeader("X-Update-Nonce",nonce);
-		put.addHeader("Content-Type","application/atom+xml");
-		put.addHeader("Content-Length","" + comment.length());
-		
+		put.addHeader("X-Update-Nonce", nonce);
+		put.addHeader("Content-Type", "application/atom+xml");
+		put.addHeader("Content-Length", "" + comment.length());
+
 		try {
-			ByteArrayEntity entity = new ByteArrayEntity(comment.getBytes("UTF-8"));
+			ByteArrayEntity entity = new ByteArrayEntity(
+					comment.getBytes("UTF-8"));
 			put.body(entity);
-			
+
 			Response apiResponse = put.execute();
 			HttpResponse hr = apiResponse.returnResponse();
 
@@ -219,20 +229,20 @@ public class CommentsDefinition implements APIDefinition {
 			}
 
 			// Default to 200
-			else{
+			else {
 				response.setStatus(200);
 			}
 
 		} catch (IOException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
 			response.setStatus(500);
-			e.printStackTrace();
-		} 
-		
+			logger.severe("Issue with update comment" + e.toString());
+		}
+
 	}
-	
+
 	/**
-	 * creates a new comment with a given library id and document id  
+	 * creates a new comment with a given library id and document id
 	 * 
 	 * @param bearer
 	 * @param pid
@@ -243,23 +253,25 @@ public class CommentsDefinition implements APIDefinition {
 	 */
 	public void createComment(String bearer, String pid, String uid,
 			String body, String nonce, HttpServletResponse response) {
-		String apiUrl = getApiUrl() + "/userlibrary/" + uid + "/document/" + pid + "/feed";
-	
+		String apiUrl = getApiUrl() + "/userlibrary/" + uid + "/document/"
+				+ pid + "/feed";
+
 		try {
 			JSONObject obj = new JSONObject(body);
-			
+
 			String comment = generateComment(obj.getString("comment"));
-			
-			// Generate the 
+
+			// Generate the
 			Request post = Request.Post(apiUrl);
 			post.addHeader("Authorization", "Bearer " + bearer);
-			post.addHeader("X-Update-Nonce",nonce);
-			post.addHeader("Content-Type","application/atom+xml");
-			post.addHeader("Content-Length","" + comment.length());
-			
-			ByteArrayEntity entity = new ByteArrayEntity(comment.getBytes("UTF-8"));
+			post.addHeader("X-Update-Nonce", nonce);
+			post.addHeader("Content-Type", "application/atom+xml");
+			post.addHeader("Content-Length", "" + comment.length());
+
+			ByteArrayEntity entity = new ByteArrayEntity(
+					comment.getBytes("UTF-8"));
 			post.body(entity);
-			
+
 			Response apiResponse = post.execute();
 			HttpResponse hr = apiResponse.returnResponse();
 
@@ -279,68 +291,70 @@ public class CommentsDefinition implements APIDefinition {
 			}
 
 			// Default to 200
-			else if(code == 201){
+			else if (code == 201) {
 				response.setStatus(200);
-				
+
 				InputStream in = hr.getEntity().getContent();
 				String jsonString = org.apache.wink.json4j.utils.XML.toJson(in);
-				
+
 				JSONObject base = new JSONObject(jsonString);
 				JSONObject entry = base.getJSONObject("entry");
 				JSONObject author = entry.getJSONObject("author");
-				
+
 				String name = author.getString("name");
 				String userid = author.getString("snx:userid");
 				String date = entry.getString("date");
 				String content = entry.getString("content");
 				String cid = entry.getString("td:uuid");
-				
-				//Build the JSON object
+
+				// Build the JSON object
 				JSONObject commentJSON = new JSONObject();
 				commentJSON.put("uid", userid);
 				commentJSON.put("author", name);
 				commentJSON.put("date", date);
 				commentJSON.put("content", content);
 				commentJSON.put("cid", cid);
-				
+
 				// Flush the Object to the Stream with content type
-				response.setHeader("Content-Type","application/json");
+				response.setHeader("Content-Type", "application/json");
 				ServletOutputStream out = response.getOutputStream();
 				commentJSON.write(out);
-				
+
 			}
 
 		} catch (IOException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
 			response.setStatus(500);
-			e.printStackTrace();
+			logger.severe("Issue with create comment" + e.toString());
 		} catch (JSONException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
 			response.setStatus(500);
-			e.printStackTrace();
+			logger.severe("Issue with create comment" + e.toString());
 		} catch (SAXException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
 			response.setStatus(500);
-			e.printStackTrace();
-		} 
+			logger.severe("Issue with create comment" + e.toString());
+		}
 	}
-	
+
 	/**
-	 * reads the comments from the comments feed 
+	 * reads the comments from the comments feed
 	 * 
 	 * @param bearer
 	 * @param pid
 	 * @param uid
 	 * @param response
 	 */
-	public void readComments(String bearer, String pid, String uid, HttpServletResponse response){
-		String apiUrl = getApiUrl() + "/userlibrary/" + uid + "/document/" + pid + "/feed?category=comment&sortBy=created&sortOrder=desc";
-		
+	public void readComments(String bearer, String pid, String uid,
+			HttpServletResponse response) {
+		String apiUrl = getApiUrl() + "/userlibrary/" + uid + "/document/"
+				+ pid + "/feed?category=comment&sortBy=created&sortOrder=desc";
+
 		Request get = Request.Get(apiUrl);
 		get.addHeader("Authorization", "Bearer " + bearer);
-		
+
 		try {
-						
+
 			Response apiResponse = get.execute();
 			HttpResponse hr = apiResponse.returnResponse();
 
@@ -360,61 +374,61 @@ public class CommentsDefinition implements APIDefinition {
 			}
 
 			// Default to 200
-			else if(code == 200){
+			else if (code == 200) {
 				response.setStatus(200);
-				
+
 				InputStream in = hr.getEntity().getContent();
 				String jsonString = org.apache.wink.json4j.utils.XML.toJson(in);
 				JSONObject feed = new JSONObject(jsonString);
-				
+
 				JSONArray comments = new JSONArray();
-				
+
 				JSONArray entries = feed.getJSONArray("entry");
 				int len = entries.length();
-				for(int i = 0; i < len; i++){
+				for (int i = 0; i < len; i++) {
 					JSONObject entry = entries.getJSONObject(i);
 					JSONObject author = entry.getJSONObject("author");
-					
+
 					String name = author.getString("name");
 					String userid = author.getString("snx:userid");
 					String date = entry.getString("date");
 					String content = entry.getString("content");
 					String cid = entry.getString("td:uuid");
 
-					//Build the JSON object
+					// Build the JSON object
 					JSONObject commentJSON = new JSONObject();
 					commentJSON.put("uid", userid);
 					commentJSON.put("author", name);
 					commentJSON.put("date", date);
 					commentJSON.put("content", content);
 					commentJSON.put("cid", cid);
-					
+
 					comments.add(commentJSON);
-					
+
 				}
-				
+
 				// Flush the Object to the Stream with content type
-				response.setHeader("Content-Type","application/json");
+				response.setHeader("Content-Type", "application/json");
 				ServletOutputStream out = response.getOutputStream();
 				comments.write(out);
-				
+
 			}
 
 		} catch (IOException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
 			response.setStatus(500);
-			e.printStackTrace();
+			logger.severe("Issue with read comments" + e.toString());
 		} catch (JSONException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
 			response.setStatus(500);
-			e.printStackTrace();
+			logger.severe("Issue with read comments" + e.toString());
 		} catch (SAXException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
 			response.setStatus(500);
-			e.printStackTrace();
-		} 
+			logger.severe("Issue with read comments" + e.toString());
+		}
 	}
-	
+
 	/**
 	 * manages interactions with comments based on method
 	 * 
@@ -430,92 +444,99 @@ public class CommentsDefinition implements APIDefinition {
 		 * get the users bearer token
 		 */
 		HttpSession session = request.getSession();
-		UserSession user = (UserSession) session.getAttribute("User");
-		String bearer = user.getBearer();		
-		
+		OAuth20Data data = (OAuth20Data) session.getAttribute("credentials");
+		String bearer = data.getAccessToken();
+
 		// Create a Comment
 		if (method.compareTo("POST") == 0) {
-			//Extract the URL parameters from the request
+			// Extract the URL parameters from the request
 			String pid = request.getParameter("pid");
 			String uid = request.getParameter("uid");
-			
+
 			try {
 				String body = IOUtils.toString(request.getInputStream());
-				
-				//Checks the State of the URL parameters 
-				if( pid == null || uid == null || body == null || body.isEmpty() || pid.isEmpty() || uid.isEmpty()){
+
+				// Checks the State of the URL parameters
+				if (pid == null || uid == null || body == null
+						|| body.isEmpty() || pid.isEmpty() || uid.isEmpty()) {
 					response.setStatus(412);
-				}else{
-					String nonce = getNonce(bearer,response);
-					if(!nonce.isEmpty()){
-						createComment(bearer,pid,uid,body,nonce,response);
+				} else {
+					String nonce = getNonce(bearer, response);
+					if (!nonce.isEmpty()) {
+						createComment(bearer, pid, uid, body, nonce, response);
 					}
 				}
-								
+
 			} catch (IOException e) {
-				response.setHeader("X-Application-Error", e.getClass().getName());
+				response.setHeader("X-Application-Error", e.getClass()
+						.getName());
 				response.setStatus(500);
-				e.printStackTrace();
-			}		
+				logger.severe("Issue with POST comment" + e.toString());
+			}
 		}
 		// Update a Comment
 		else if (method.compareTo("PUT") == 0) {
-			//Extract the URL parameters from the request
+			// Extract the URL parameters from the request
 			String cid = request.getParameter("cid");
 			String pid = request.getParameter("pid");
 			String uid = request.getParameter("uid");
-			
+
 			try {
 				String body = IOUtils.toString(request.getInputStream());
-				
-				//Checks the State of the URL parameters 
-				if(cid == null || pid == null || uid == null || body == null || body.isEmpty() || cid.isEmpty() || pid.isEmpty() || uid.isEmpty()){
+
+				// Checks the State of the URL parameters
+				if (cid == null || pid == null || uid == null || body == null
+						|| body.isEmpty() || cid.isEmpty() || pid.isEmpty()
+						|| uid.isEmpty()) {
 					response.setStatus(412);
-				}else{
-					String nonce = getNonce(bearer,response);
-					if(!nonce.isEmpty()){
-						updateComment(bearer,cid,pid,uid,body,nonce,response);
+				} else {
+					String nonce = getNonce(bearer, response);
+					if (!nonce.isEmpty()) {
+						updateComment(bearer, cid, pid, uid, body, nonce,
+								response);
 					}
 				}
-								
+
 			} catch (IOException e) {
-				response.setHeader("X-Application-Error", e.getClass().getName());
+				response.setHeader("X-Application-Error", e.getClass()
+						.getName());
 				response.setStatus(500);
-				e.printStackTrace();
+				logger.severe("Issue with PUT comment" + e.toString());
 			}
-			
+
 		}
 		// Delete a Comment
 		else if (method.compareTo("DELETE") == 0) {
-			//Extract the URL parameters from the request
+			// Extract the URL parameters from the request
 			String cid = request.getParameter("cid");
 			String pid = request.getParameter("pid");
 			String uid = request.getParameter("uid");
-			
-			//Checks the State of the URL parameters 
-			if(cid == null || pid == null || uid == null || cid.isEmpty() || pid.isEmpty() || uid.isEmpty()){
+
+			// Checks the State of the URL parameters
+			if (cid == null || pid == null || uid == null || cid.isEmpty()
+					|| pid.isEmpty() || uid.isEmpty()) {
 				response.setStatus(412);
-			}else{
-				String nonce = getNonce(bearer,response);
-	
-				if(!nonce.isEmpty()){
-					deleteComment(bearer,cid,pid,uid,response,nonce);
+			} else {
+				String nonce = getNonce(bearer, response);
+
+				if (!nonce.isEmpty()) {
+					deleteComment(bearer, cid, pid, uid, response, nonce);
 				}
 			}
-			
+
 		}
 		// Read a Comment and default to a GET
 		else {
-			//Extract the URL parameters from the request
+			// Extract the URL parameters from the request
 			String pid = request.getParameter("pid");
 			String uid = request.getParameter("uid");
-			
-			if( pid == null || uid == null || pid.isEmpty() || uid.isEmpty()){
+
+			if (pid == null || uid == null || pid.isEmpty() || uid.isEmpty()) {
 				response.setStatus(412);
-			}else{
-				readComments(bearer,pid,uid,response);
+			} else {
+				readComments(bearer, pid, uid, response);
 			}
-				
+
 		}
 
 	}

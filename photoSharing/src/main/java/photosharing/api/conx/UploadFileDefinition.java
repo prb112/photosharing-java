@@ -1,13 +1,27 @@
 /**
- * 
+ * © Copyright IBM Corp. 2015
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at:
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * permissions and limitations under the License.
  */
 package photosharing.api.conx;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map.Entry;
+import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -25,29 +39,32 @@ import org.xml.sax.SAXException;
 
 import photosharing.api.Configuration;
 import photosharing.api.base.APIDefinition;
-import photosharing.api.user.UserSession;
+import photosharing.api.oauth.CallbackDefinition;
+import photosharing.api.oauth.OAuth20Data;
 
 /**
  * The class calls the API for a Uploading a File to IBM Connections<a
  * href="http://ibm.co/1PTMmqO">File Upload API</a>
  * 
  * @author Paul Bastide <pbastide@us.ibm.com>
- *
+ * 
  */
 public class UploadFileDefinition implements APIDefinition {
+
+	// Logger
+	private final static String className = CallbackDefinition.class.getName();
+	private Logger logger = Logger.getLogger(className);
 
 	/**
 	 * generate the base api url for files
 	 * 
 	 * @param userid
-	 * @return
+	 * @return url to the api
 	 */
 	private String getApiUrl() {
-		String server = Configuration
-				.getConfigurationValue(Configuration.SERVER);
+		Configuration config = Configuration.getInstance(null);
 		StringBuilder builder = new StringBuilder();
-		builder.append("https://");
-		builder.append(server);
+		builder.append(config.getValue(Configuration.BASEURL));
 		builder.append("/files/oauth/api");
 		return builder.toString();
 	}
@@ -56,14 +73,12 @@ public class UploadFileDefinition implements APIDefinition {
 	 * gets the nonce url <a href="http://ibm.co/1fG83gY">Get a Cryptographic
 	 * Key</a>
 	 * 
-	 * @return
+	 * @return the api url for the nonce
 	 */
 	private String getNonceUrl() {
-		String server = Configuration
-				.getConfigurationValue(Configuration.SERVER);
+		Configuration config = Configuration.getInstance(null);
 		StringBuilder builder = new StringBuilder();
-		builder.append("https://");
-		builder.append(server);
+		builder.append(config.getValue(Configuration.BASEURL));
 		builder.append("/files/oauth/api/nonce");
 		return builder.toString();
 	}
@@ -108,7 +123,7 @@ public class UploadFileDefinition implements APIDefinition {
 		} catch (IOException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
 			response.setStatus(500);
-			e.printStackTrace();
+			logger.severe("IOException " + e.toString());
 		}
 
 		return nonce;
@@ -135,61 +150,63 @@ public class UploadFileDefinition implements APIDefinition {
 		if (visibility == null || title == null || title.isEmpty()
 				|| visibility.isEmpty()) {
 			response.setStatus(412);
-			
+
 		} else {
 
-			//MultiValueMap is used to parameters
+			// MultiValueMap is used to parameters
 			MultiValueMap<String, String> urlParams = new MultiValueMap<String, String>();
 			urlParams.put("visibility", visibility);
 			urlParams.put("title", title);
-			
-			// The Share parameters for the URL 
-			if(share != null && !share.isEmpty()){
+
+			// The Share parameters for the URL
+			if (share != null && !share.isEmpty()) {
 				urlParams.put("shared", "true");
 				urlParams.put("sharedWith", share);
 			}
-			
+
 			// Splits the TagString into Indvidual Tags
 			String[] tags = tagsUnsplit.split(",");
 			for (String tag : tags) {
 				urlParams.put("tag", tag);
 			}
-			
-			//Updates to the parameters 
+
+			// Updates to the parameters
 			StringBuilder builder = new StringBuilder();
-			Iterator<Entry<String, String>> iter =urlParams.iterator();
-			while(iter.hasNext()){
-				Entry<String,String> entry = iter.next();
+			Iterator<Entry<String, String>> iter = urlParams.iterator();
+			while (iter.hasNext()) {
+				Entry<String, String> entry = iter.next();
 				String param = entry.getKey();
-				
+
 				@SuppressWarnings("unchecked")
-				Collection<String> col = (Collection<String>) urlParams.get(param);
-				for(String val : col){
-					builder.append("&" + param +"=");
+				Collection<String> col = (Collection<String>) urlParams
+						.get(param);
+				for (String val : col) {
+					builder.append("&" + param + "=");
 					builder.append(val);
 				}
-				
+
 			}
-			
-			//Build the apiURL 
-			String apiUrl = getApiUrl() + "/myuserlibrary/feed?" + builder.toString();
-			
+
+			// Build the apiURL
+			String apiUrl = getApiUrl() + "/myuserlibrary/feed?"
+					+ builder.toString();
+
 			// Add the Headers
 			String length = request.getHeader("X-Content-Length");
 			String slug = title.split(".")[0];
-			
+
 			Request post = Request.Post(apiUrl);
 			post.addHeader("Authorization", "Bearer " + bearer);
 			post.addHeader("X-Update-Nonce", nonce);
-			post.addHeader("Slug",slug);
-			post.addHeader("Content-Length",length);
-			
+			post.addHeader("Slug", slug);
+			post.addHeader("Content-Length", length);
+
 			try {
-				// 
+				//
 				InputStream in = request.getInputStream();
 				InputStreamEntity entity = new InputStreamEntity(in);
 				post.body(entity);
-				
+
 				Response apiResponse = post.execute();
 				HttpResponse hr = apiResponse.returnResponse();
 
@@ -207,9 +224,9 @@ public class UploadFileDefinition implements APIDefinition {
 				else if (code == 401) {
 					response.setStatus(401);
 				}
-				
-				// Duplicate Item 
-				else if(code == 409){
+
+				// Duplicate Item
+				else if (code == 409) {
 					response.setStatus(409);
 				}
 
@@ -217,33 +234,37 @@ public class UploadFileDefinition implements APIDefinition {
 				else {
 					response.setStatus(200);
 					/**
-					 * Do Extra Processing Here to process the body 
+					 * Do Extra Processing Here to process the body
 					 */
 					InputStream inRes = hr.getEntity().getContent();
-					
-					//Converts XML to JSON String
-					String jsonString = org.apache.wink.json4j.utils.XML.toJson(inRes);
+
+					// Converts XML to JSON String
+					String jsonString = org.apache.wink.json4j.utils.XML
+							.toJson(inRes);
 					JSONObject obj = new JSONObject(jsonString);
 					
-					
-					
+					response.setContentType("application/json");
+					PrintWriter writer = response.getWriter();
+					writer.append(obj.toString());
+					writer.close();
+
 				}
 
 			} catch (IOException e) {
 				response.setHeader("X-Application-Error", e.getClass()
 						.getName());
 				response.setStatus(500);
-				e.printStackTrace();
+				logger.severe("IOException " + e.toString());
 			} catch (SAXException e) {
 				response.setHeader("X-Application-Error", e.getClass()
 						.getName());
 				response.setStatus(500);
-				e.printStackTrace();
+				logger.severe("IOException " + e.toString());
 			} catch (JSONException e) {
 				response.setHeader("X-Application-Error", e.getClass()
 						.getName());
 				response.setStatus(500);
-				e.printStackTrace();
+				logger.severe("IOException " + e.toString());
 			}
 		}
 	}
@@ -263,8 +284,8 @@ public class UploadFileDefinition implements APIDefinition {
 		 * get the users bearer token
 		 */
 		HttpSession session = request.getSession();
-		UserSession user = (UserSession) session.getAttribute("User");
-		String bearer = user.getBearer();
+		OAuth20Data data = (OAuth20Data) session.getAttribute("credentials");
+		String bearer = data.getAccessToken();
 
 		// Create a Comment
 		if (method.compareTo("POST") == 0) {

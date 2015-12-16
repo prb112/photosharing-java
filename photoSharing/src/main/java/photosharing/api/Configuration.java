@@ -72,7 +72,7 @@ public class Configuration {
 	
 	/**
 	 * gets a single instance of the configuration object
-	 * @param request
+	 * @param request can be null or a given request object
 	 * @return the single Configuration object
 	 */
 	public static Configuration getInstance(HttpServletRequest request){

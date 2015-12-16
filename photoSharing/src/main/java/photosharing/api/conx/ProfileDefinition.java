@@ -1,11 +1,24 @@
 /**
- * 
+ * © Copyright IBM Corp. 2015
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at:
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * permissions and limitations under the License.
  */
 package photosharing.api.conx;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.util.logging.Logger;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
@@ -22,16 +35,21 @@ import org.xml.sax.SAXException;
 
 import photosharing.api.Configuration;
 import photosharing.api.base.APIDefinition;
-import photosharing.api.user.UserSession;
+import photosharing.api.oauth.CallbackDefinition;
+import photosharing.api.oauth.OAuth20Data;
 
 /**
  * The class calls the API for a Profile in IBM Connections <a
  * href="http://ibm.co/1K1rZZX">Profile API</a>
  * 
  * @author Paul Bastide <pbastide@us.ibm.com>
- *
+ * 
  */
 public class ProfileDefinition implements APIDefinition {
+
+	// Logger
+	private final static String className = CallbackDefinition.class.getName();
+	private Logger logger = Logger.getLogger(className);
 
 	/**
 	 * generate the api url with a given userid
@@ -40,9 +58,8 @@ public class ProfileDefinition implements APIDefinition {
 	 * @return
 	 */
 	private String getApiUrl(String userid) {
-		String server = Configuration
-				.getConfigurationValue(Configuration.SERVER);
-		String apiUrl = "https://" + server
+		Configuration config = Configuration.getInstance(null);
+		String apiUrl = config.getValue(Configuration.BASEURL)
 				+ "/profiles/atom/profile.do?userid=" + userid;
 		return apiUrl;
 	}
@@ -55,7 +72,8 @@ public class ProfileDefinition implements APIDefinition {
 	 */
 	@Override
 	public void run(HttpServletRequest request, HttpServletResponse response) {
-
+		
+		
 		/**
 		 * check if query is empty, send 412
 		 */
@@ -68,8 +86,8 @@ public class ProfileDefinition implements APIDefinition {
 		 * get the users bearer token
 		 */
 		HttpSession session = request.getSession();
-		UserSession user = (UserSession) session.getAttribute("User");
-		String bearer = user.getBearer();
+		OAuth20Data data = (OAuth20Data) session.getAttribute("credentials");
+		String bearer = data.getAccessToken();
 
 		/**
 		 * The query should be cleansed before passing it to the backend
@@ -108,7 +126,7 @@ public class ProfileDefinition implements APIDefinition {
 				JSONObject entry = jsonObj.getJSONArray("feed")
 						.getJSONObject(0);
 
-				//Check if the Entry exists for the given id
+				// Check if the Entry exists for the given id
 				if (entry != null) {
 					// Start Building the Response
 					String name = "";
@@ -118,26 +136,27 @@ public class ProfileDefinition implements APIDefinition {
 					JSONObject contributor = entry.getJSONObject("contributor");
 					name = contributor.getString("name");
 					email = contributor.getString("email");
-					
+
 					JSONArray links = entry.getJSONArray("link");
-					
+
 					// Scans through the links and finds the profile image
 					// XPath is much more efficient
 					boolean found = false;
 					int idx = 0;
 					int len = links.length();
-					while(!found && idx < len) {
+					while (!found && idx < len) {
 						JSONObject link = links.getJSONObject(idx);
-						
+
 						String type = link.getString("type");
-						if(type != null && !type.isEmpty() && type.compareTo("image")==0){
+						if (type != null && !type.isEmpty()
+								&& type.compareTo("image") == 0) {
 							found = true;
 							image = link.getString("href");
 						}
-						
+
 						idx++;
 					}
-					
+
 					// Build the json to send back
 					JSONObject profile = new JSONObject();
 					profile.put("name", name);
@@ -147,8 +166,8 @@ public class ProfileDefinition implements APIDefinition {
 					// Write output streams
 					ServletOutputStream out = response.getOutputStream();
 					profile.write(out);
-					
-				}else{
+
+				} else {
 					// There is no Entry for the user with the id.
 					PrintWriter out = response.getWriter();
 					out.println("User does not exist");
@@ -166,15 +185,15 @@ public class ProfileDefinition implements APIDefinition {
 		} catch (IOException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
 			response.setStatus(500);
-			e.printStackTrace();
+			logger.severe("IOException " + e.toString());
 		} catch (JSONException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
 			response.setStatus(500);
-			e.printStackTrace();
+			logger.severe("JSONException " + e.toString());
 		} catch (SAXException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
 			response.setStatus(500);
-			e.printStackTrace();
+			logger.severe("SAXException  " + e.toString());
 		}
 
 	}
