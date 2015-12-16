@@ -26,7 +26,6 @@ httpclient
 httpmime
 commons-io
 was-liberty
-org.apache.oltu.oauth2.client
 commons-collections4
 
 # Installation

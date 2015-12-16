@@ -3,6 +3,11 @@
   text-align: center  !important;
 }
 
+/* Styling for logIn button */
+.logIn {
+  margin-right: 10px;
+}
+
 /*------- Styling for page-home.ejs -------*/
 
 .hidden {
