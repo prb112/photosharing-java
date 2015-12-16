@@ -24,7 +24,6 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.http.HttpStatus;
 
-import photosharing.api.Configuration;
 import photosharing.api.base.APIDefinition;
 
 /**
@@ -54,54 +53,40 @@ public class CallbackDefinition implements APIDefinition {
 	 *            the http response object
 	 */
 	public void run(HttpServletRequest request, HttpServletResponse response) {
-		
-		// Checks the Referrer Header and enables processing based on the valid
-		// header - it's not used for validation, rather invalidation, and aligns
-		// with the best practices described in http://stackoverflow.com/questions/8319862/can-i-rely-on-referer-http-header
-		Configuration config = Configuration.getInstance(request);
-		String server = config.getValue(Configuration.HOSTNAME);
-		
-		String referrer = request.getHeader("Referer");
-		if (server != null && referrer != null
-				&& referrer.compareTo(server) == 0) {
-			HttpSession session = request.getSession();
-			if (session != null) {
-				String code = request.getParameter("code");
 
-				// Code should not be null and the length should be greater than
-				// or equal 256 characters per the flow
-				if (code != null && code.length() >= 256) {
+		HttpSession session = request.getSession();
+		if (session != null) {
+			String code = request.getParameter("code");
 
-					// Accesses the OAuth 20 Data
-					OAuth20Handler handler = OAuth20Handler.getInstance();
-					OAuth20Data oauthData = handler.getAccessToken(code);
-					
-					//Checks the OAuth 2.0 data
-					if(oauthData != null){
-						// When there is credential data persist in the session and return SC_OK with no body
-						session.setAttribute("credentials", oauthData);
-						response.setStatus(HttpStatus.SC_OK);
-					}else{
-						//OAuth Data
-						logger.log(Level.WARNING,"Error handling the oauth data");
-						response.setStatus(HttpStatus.SC_BAD_REQUEST);
-					}
+			// Code should not be null and the length should be greater than
+			// or equal 254 characters per the flow
+			if (code != null && code.length() >= 254) {
+
+				// Accesses the OAuth 20 Data
+				OAuth20Handler handler = OAuth20Handler.getInstance();
+				OAuth20Data oauthData = handler.getAccessToken(code);
+
+				// Checks the OAuth 2.0 data
+				if (oauthData != null) {
+					// When there is credential data persist in the session and
+					// return SC_OK with no body
+					session.setAttribute("credentials", oauthData);
+					response.setStatus(HttpStatus.SC_OK);
 				} else {
-					// When there is no code, set SC_BAD_REQUEST
-					logger.log(Level.WARNING, "No Code passed into the URL "
-							+ request.getPathInfo());
+					// OAuth Data
+					logger.log(Level.WARNING, "Error handling the oauth data");
 					response.setStatus(HttpStatus.SC_BAD_REQUEST);
 				}
-
 			} else {
-				// When there is no session, set SC_BAD_REQUEST
-				logger.log(Level.WARNING, "Invalid Session");
+				// When there is no code, set SC_BAD_REQUEST
+				logger.log(Level.WARNING, "No Code passed into the URL "
+						+ request.getPathInfo());
 				response.setStatus(HttpStatus.SC_BAD_REQUEST);
 			}
 
 		} else {
-			// When the referrer is bad, set SC_BAD_REQUEST
-			logger.log(Level.WARNING, "Invalid Referer should match expected");
+			// When there is no session, set SC_BAD_REQUEST
+			logger.log(Level.WARNING, "Invalid Session");
 			response.setStatus(HttpStatus.SC_BAD_REQUEST);
 		}
 

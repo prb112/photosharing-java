@@ -24,8 +24,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
 
-import photosharing.api.oauth.CallbackDefinition;
-
 /**
  * Mock Class to return API content if there is no API available 
  * 

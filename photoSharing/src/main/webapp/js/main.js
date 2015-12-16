@@ -119,7 +119,7 @@ photoApp.controller('NavigationButtonController', function($location, $scope, $r
 	
 	//Logs out the User.  
 	$scope.logout = function(){
-		$log.debug("Logging out the User and destroying the server session")
+		$log.debug("Logging out the User and destroying the server session");
 		$rootScope.loggedin = false;
 		
 		/**
@@ -127,11 +127,14 @@ photoApp.controller('NavigationButtonController', function($location, $scope, $r
 		 */
 		$http({
 			method: 'GET',
-			url: "../api/logout"
+			url: "./api/logout"
 		}).then(function success(response){
-			$log.debug($response);
-		}, function error(response){
-			$log.debug($response);
+			if(status == 200){
+				//Success, the logged in flip happened
+			}
+			else $log.debug(status);
+		}, function error(response, status){
+			$log.debug("User not logged in? " + status);
 		});
 	};
 	

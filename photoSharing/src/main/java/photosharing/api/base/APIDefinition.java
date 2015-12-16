@@ -29,8 +29,8 @@ public interface APIDefinition {
 	/**
 	 * runs the API with the given request 
 	 * 
-	 * @param uri
-	 * @param method
+	 * @param request - the incoming HTTP request
+	 * @param response - the outgoing HTTP response
 	 */
 	public void run(HttpServletRequest request, HttpServletResponse response);
 }
