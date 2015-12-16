@@ -15,48 +15,98 @@
  */
 package photosharing.api.oauth;
 
+import java.util.logging.Logger;
+
+import javax.servlet.http.HttpServletRequest;
+
+import photosharing.api.Configuration;
+
 /**
  * <a href="http://ibm.co/1WOTZni">OAuth 2.0 APIs for web server flow</a>
- * @author Paul Bastide <pbastide@us.ibm.com> 
+ * 
+ * @author Paul Bastide <pbastide@us.ibm.com>
  */
 public class OAuth20Handler {
-	
+
+	// Logger
+	private final static String className = CallbackDefinition.class.getName();
+	private Logger logger = Logger.getLogger(className);
+
 	/**
-	 * Only one instance of this class is needed. 
+	 * Component Path for OAuth2.0 API on IBM Connections Cloud
+	 */
+	public final static String TOKENURL = "/manage/oauth2/token";
+	public final static String AUTHURL = "/manage/oauth2/authorize";
+
+	/**
+	 * Only one instance of this class is needed.
 	 */
 	private static OAuth20Handler _handler;
-	
+
 	/**
 	 * private constructor
 	 */
-	private OAuth20Handler(){
-		
+	private OAuth20Handler() {
+
 	}
-	
+
 	/**
 	 * gets the single instance of the OAuth20 Handler
+	 * 
 	 * @return {OAuth20Handler} single instance of handler
 	 */
-	public static OAuth20Handler getInstance(){
-		if(_handler == null){
+	public static OAuth20Handler getInstance() {
+		if (_handler == null) {
 			_handler = new OAuth20Handler();
 		}
 		return _handler;
 	}
-	
+
+	/**
+	 * builds the authorization url for OAuth 2.0 redirect
+	 * 
+	 * For instance, the URL could be:
+	 * https://apps.na.collabserv.com/manage/oauth2
+	 * /authorize?response_type=code&
+	 * client_id=app_example&callback_uri=http://localhost/callback
+	 * 
+	 * @param request current http request
+	 * @return url to redirected to for authorization
+	 */
+	public String generateRedirect(HttpServletRequest request) {
+		Configuration config = Configuration.getInstance(request);
+		
+		//Builds the URL in a StringBuilder
+		StringBuilder builder = new StringBuilder();
+		builder.append(config.getValue(Configuration.BASEURL));
+		builder.append(AUTHURL);
+		builder.append("?");
+		builder.append("response_type=code");
+		builder.append("&");
+		builder.append("client_id=");
+		builder.append(config.getValue(Configuration.CLIENTID));
+		builder.append("&");
+		builder.append("callback_uri=");
+		builder.append(config.getValue(Configuration.CALLBACKURL));
+		
+		return builder.toString();
+	}
+
 	/**
 	 * 
 	 * @return
 	 */
-	public OAuth20Data getAccessToken(){
+	public OAuth20Data getAccessToken() {
+		logger.finest("getAccessToken activated");
 		return new OAuth20Data();
 	}
-	
+
 	/**
 	 * 
 	 * @return
 	 */
-	public OAuth20Data renewAccessToken(){
+	public OAuth20Data renewAccessToken() {
+		logger.finest("renewAccessToken activated");
 		return new OAuth20Data();
 	}
 }
