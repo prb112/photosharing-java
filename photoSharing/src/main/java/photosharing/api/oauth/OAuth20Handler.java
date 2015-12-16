@@ -94,9 +94,10 @@ public class OAuth20Handler {
 
 	/**
 	 * 
-	 * @return
+	 * @param code - the 256 character code representing temporary credentials
+	 * @return the OAuth 20 configuration for the user requesting
 	 */
-	public OAuth20Data getAccessToken() {
+	public OAuth20Data getAccessToken(String code) {
 		logger.finest("getAccessToken activated");
 		return new OAuth20Data();
 	}

@@ -39,11 +39,10 @@ public class OAuthDefinition implements APIDefinition {
 	 */
 	@Override
 	public void run(HttpServletRequest request, HttpServletResponse response) {
-				
-		OAuth20Handler handler = OAuth20Handler.getInstance();
-		String redirect = handler.generateRedirect(request);
 		
 		try{
+			OAuth20Handler handler = OAuth20Handler.getInstance();
+			String redirect = handler.generateRedirect(request);
 			response.sendRedirect(redirect);
 		}catch(Exception e){
 			logger.severe("Issue with redirect to Auth URL");

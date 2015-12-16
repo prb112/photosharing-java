@@ -74,7 +74,7 @@ public class CallbackDefinition implements APIDefinition {
 
 					// Accesses the OAuth 20 Data
 					OAuth20Handler handler = OAuth20Handler.getInstance();
-					OAuth20Data oauthData = handler.getAccessToken();
+					OAuth20Data oauthData = handler.getAccessToken(code);
 					
 					//Checks the OAuth 2.0 data
 					if(oauthData != null){
@@ -82,7 +82,7 @@ public class CallbackDefinition implements APIDefinition {
 						session.setAttribute("credentials", oauthData);
 						response.setStatus(HttpStatus.SC_OK);
 					}else{
-						//
+						//OAuth Data
 						logger.log(Level.WARNING,"Error handling the oauth data");
 						response.setStatus(HttpStatus.SC_BAD_REQUEST);
 					}
