@@ -15,6 +15,7 @@
  */
 package photosharing.api.oauth;
 
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -23,7 +24,9 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.http.HttpStatus;
+import org.apache.http.entity.ContentType;
 
+import photosharing.api.Configuration;
 import photosharing.api.base.APIDefinition;
 
 /**
@@ -53,35 +56,69 @@ public class CallbackDefinition implements APIDefinition {
 	 *            the http response object
 	 */
 	public void run(HttpServletRequest request, HttpServletResponse response) {
-
+		
+		@SuppressWarnings("unused")
+		Configuration config = Configuration.getInstance(request);		
+		
 		HttpSession session = request.getSession();
 		if (session != null) {
 			String code = request.getParameter("code");
 
-			// Code should not be null and the length should be greater than
-			// or equal 254 characters per the flow
-			if (code != null && code.length() >= 254) {
+			// Checks to see if there is an oauth_error
+			String error = request.getParameter("oauth_error");
+			if (error != null) {
+				// When there is an oauth_error, set SC_BAD_REQUEST
+				logger.log(Level.WARNING, "Error on OAuth " + error);
+				response.setStatus(HttpStatus.SC_BAD_REQUEST);
+				
+			} else {
+				// Code should not be null and the length should be greater than
+				// or equal 254 characters per the flow
+				if (code != null && code.length() >= 254) {
 
-				// Accesses the OAuth 20 Data
-				OAuth20Handler handler = OAuth20Handler.getInstance();
-				OAuth20Data oauthData = handler.getAccessToken(code);
+					logger.finest("Code : " + code);
 
-				// Checks the OAuth 2.0 data
-				if (oauthData != null) {
-					// When there is credential data persist in the session and
-					// return SC_OK with no body
-					session.setAttribute("credentials", oauthData);
-					response.setStatus(HttpStatus.SC_OK);
+					// Accesses the OAuth 20 Data
+					OAuth20Handler handler = OAuth20Handler.getInstance();
+					OAuth20Data oauthData = null;
+					try {
+						oauthData = handler.getAccessToken(code);
+					} catch (IOException e1) {
+						logger.log(Level.WARNING,
+								"IOException on getAccessToken  " + e1.toString());
+					}
+
+					// Checks the OAuth 2.0 data
+					if (oauthData != null) {
+						// When there is credential data persist in the session
+						// and
+						// return SC_OK with no body
+						session.setAttribute("credentials", oauthData);
+
+						response.setContentType(ContentType.APPLICATION_JSON
+								.getMimeType());
+						response.setStatus(HttpStatus.SC_OK);
+
+						// Redirects back to the logged in experience
+						try {
+							response.sendRedirect("../index.html");
+						} catch (IOException e) {
+							logger.log(Level.WARNING,
+									"IOException on Redirect " + e.toString());
+						}
+
+					} else {
+						// OAuth Data
+						logger.log(Level.WARNING,
+								"Error handling the oauth data");
+						response.setStatus(HttpStatus.SC_BAD_REQUEST);
+					}
 				} else {
-					// OAuth Data
-					logger.log(Level.WARNING, "Error handling the oauth data");
+					// When there is no code, set SC_BAD_REQUEST
+					logger.log(Level.WARNING, "No Code passed into the URL "
+							+ request.getPathInfo());
 					response.setStatus(HttpStatus.SC_BAD_REQUEST);
 				}
-			} else {
-				// When there is no code, set SC_BAD_REQUEST
-				logger.log(Level.WARNING, "No Code passed into the URL "
-						+ request.getPathInfo());
-				response.setStatus(HttpStatus.SC_BAD_REQUEST);
 			}
 
 		} else {

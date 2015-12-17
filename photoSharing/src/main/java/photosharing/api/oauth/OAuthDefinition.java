@@ -44,7 +44,7 @@ public class OAuthDefinition implements APIDefinition {
 			String redirect = handler.generateRedirect(request);
 			response.sendRedirect(redirect);
 		}catch(Exception e){
-			logger.severe("Issue with redirect to Auth URL");
+			logger.severe("Issue with redirect to Auth URL" + e.toString());
 		}
 		
 	}

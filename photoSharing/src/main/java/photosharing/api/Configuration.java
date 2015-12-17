@@ -41,6 +41,7 @@ public class Configuration {
 	public final static String CLIENTID = "ClientId";
 	public final static String CLIENTSECRET = "ClientSecret";
 	public final static String CALLBACKURL = "CallbackUrl";
+	public final static String TRUST = "TRUST";
 	
 	// App Config
 	public final static String APPCONFIG = "AppConfig";

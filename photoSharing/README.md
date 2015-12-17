@@ -1,4 +1,4 @@
-# Photonode
+# PhotoJava
 
 This project provides a sample application that leverages the [IBM Connections Cloud APIs](https://developer.ibm.com/social/) to create a social photo sharing experience. The application can be deployed to IBM Bluemix or it can be deployed on it's own. 
 

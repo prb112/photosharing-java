@@ -15,11 +15,25 @@
  */
 package photosharing.api.oauth;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.fluent.Executor;
+import org.apache.http.client.fluent.Request;
+import org.apache.http.client.fluent.Response;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+
 import photosharing.api.Configuration;
+import photosharing.api.ExecutorUtil;
 
 /**
  * <a href="http://ibm.co/1WOTZni">OAuth 2.0 APIs for web server flow</a>
@@ -38,6 +52,14 @@ public class OAuth20Handler {
 	public final static String TOKENURL = "/manage/oauth2/token";
 	public final static String AUTHURL = "/manage/oauth2/authorize";
 
+	/**
+	 * Enumeration of the various grant types
+	 */
+	private enum GrantType{
+		Bearer,
+		authorization_code
+	};
+	
 	/**
 	 * Only one instance of this class is needed.
 	 */
@@ -94,12 +116,88 @@ public class OAuth20Handler {
 
 	/**
 	 * 
-	 * @param code - the 256 character code representing temporary credentials
+	 * @param code - the >254 character code representing temporary credentials
 	 * @return the OAuth 20 configuration for the user requesting
+	 * @throws IOException 
 	 */
-	public OAuth20Data getAccessToken(String code) {
-		logger.finest("getAccessToken activated");
-		return new OAuth20Data();
+	public OAuth20Data getAccessToken(String code) throws IOException {
+		logger.info("getAccessToken activated");
+		OAuth20Data oData = null;
+		
+		Configuration config = Configuration.getInstance(null);
+		
+		String body = this.generateAccessTokenRequestBody(
+				config.getValue(Configuration.CLIENTID), 
+				config.getValue(Configuration.CLIENTSECRET), 
+				config.getValue(Configuration.CALLBACKURL),
+				code);
+			
+		//Builds the URL in a StringBuilder
+		StringBuilder builder = new StringBuilder();
+		builder.append(config.getValue(Configuration.BASEURL));
+		builder.append(TOKENURL);
+		
+		Request post = Request.Post(builder.toString());
+		post.addHeader("Content-Type",ContentType.APPLICATION_FORM_URLENCODED.getMimeType());
+		post.body(new StringEntity(body));
+
+		/**
+		 * Executes with a wrapped executor
+		 */
+		Executor exec = ExecutorUtil.getExecutor();
+		Response apiResponse = exec.execute(post);
+		HttpResponse hr = apiResponse.returnResponse();
+		
+		/**
+		 * Check the status codes and if 200, convert to String
+		 * and process the response body
+		 */
+		int statusCode = hr.getStatusLine().getStatusCode();
+		logger.info("status code " + statusCode);
+		
+		if (statusCode == 200) {
+			InputStream in = hr.getEntity().getContent();
+			String x = IOUtils.toString(in);
+			oData = OAuth20Data.createInstance(x);
+		}
+		
+		return oData;
+	}
+	
+	/**
+	 * generates request body for the access token 
+	 * 
+	 * @param clientId the client id of the third party application
+	 * @param clientSecret the confidential client secret for the third party application
+	 * @param callbackURI the callbackUri that is used by the third party application
+	 * @param code the >254 character code that is short lived
+	 * @return {String} assembled request body
+	 */
+	public String generateAccessTokenRequestBody(String clientId, String clientSecret, String callbackURI, String code){
+		StringBuilder builder = new StringBuilder(); 
+		builder.append("client_id=");
+		builder.append(clientId);
+		builder.append("&");
+		
+		builder.append("client_secret=");
+		builder.append(clientSecret);
+		builder.append("&");
+		
+		builder.append("callback_uri=");
+		try {
+			builder.append(URLEncoder.encode(callbackURI,"UTF-8"));
+		} catch (UnsupportedEncodingException e) {
+			logger.log(Level.WARNING,"Encoding issue " + callbackURI);
+		}
+		builder.append("&");
+		
+		builder.append("code=");
+		builder.append(code);
+		builder.append("&");
+		
+		builder.append("grant-type=");
+		builder.append(GrantType.authorization_code.name());
+		return builder.toString();
 	}
 
 	/**
