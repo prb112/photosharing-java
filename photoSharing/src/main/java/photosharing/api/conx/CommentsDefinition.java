@@ -250,7 +250,7 @@ public class CommentsDefinition implements APIDefinition {
 
 		} catch (IOException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
-			response.setStatus(500);
+			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 			logger.severe("Issue with update comment" + e.toString());
 		}
 
@@ -339,15 +339,15 @@ public class CommentsDefinition implements APIDefinition {
 
 		} catch (IOException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
-			response.setStatus(500);
+			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 			logger.severe("Issue with create comment" + e.toString());
 		} catch (JSONException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
-			response.setStatus(500);
+			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 			logger.severe("Issue with create comment" + e.toString());
 		} catch (SAXException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
-			response.setStatus(500);
+			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 			logger.severe("Issue with create comment" + e.toString());
 		}
 	}
@@ -431,15 +431,15 @@ public class CommentsDefinition implements APIDefinition {
 
 		} catch (IOException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
-			response.setStatus(500);
+			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 			logger.severe("Issue with read comments" + e.toString());
 		} catch (JSONException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
-			response.setStatus(500);
+			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 			logger.severe("Issue with read comments" + e.toString());
 		} catch (SAXException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
-			response.setStatus(500);
+			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 			logger.severe("Issue with read comments" + e.toString());
 		}
 	}
@@ -474,7 +474,7 @@ public class CommentsDefinition implements APIDefinition {
 				// Checks the State of the URL parameters
 				if (pid == null || uid == null || body == null
 						|| body.isEmpty() || pid.isEmpty() || uid.isEmpty()) {
-					response.setStatus(412);
+					response.setStatus(HttpStatus.SC_PRECONDITION_FAILED);
 				} else {
 					String nonce = getNonce(bearer, response);
 					if (!nonce.isEmpty()) {
@@ -485,7 +485,7 @@ public class CommentsDefinition implements APIDefinition {
 			} catch (IOException e) {
 				response.setHeader("X-Application-Error", e.getClass()
 						.getName());
-				response.setStatus(500);
+				response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 				logger.severe("Issue with POST comment" + e.toString());
 			}
 		}
@@ -503,7 +503,7 @@ public class CommentsDefinition implements APIDefinition {
 				if (cid == null || pid == null || uid == null || body == null
 						|| body.isEmpty() || cid.isEmpty() || pid.isEmpty()
 						|| uid.isEmpty()) {
-					response.setStatus(412);
+					response.setStatus(HttpStatus.SC_PRECONDITION_FAILED);
 				} else {
 					String nonce = getNonce(bearer, response);
 					if (!nonce.isEmpty()) {
@@ -515,7 +515,7 @@ public class CommentsDefinition implements APIDefinition {
 			} catch (IOException e) {
 				response.setHeader("X-Application-Error", e.getClass()
 						.getName());
-				response.setStatus(500);
+				response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 				logger.severe("Issue with PUT comment" + e.toString());
 			}
 
@@ -530,7 +530,7 @@ public class CommentsDefinition implements APIDefinition {
 			// Checks the State of the URL parameters
 			if (cid == null || pid == null || uid == null || cid.isEmpty()
 					|| pid.isEmpty() || uid.isEmpty()) {
-				response.setStatus(412);
+				response.setStatus(HttpStatus.SC_PRECONDITION_FAILED);
 			} else {
 				String nonce = getNonce(bearer, response);
 
@@ -547,7 +547,7 @@ public class CommentsDefinition implements APIDefinition {
 			String uid = request.getParameter("uid");
 
 			if (pid == null || uid == null || pid.isEmpty() || uid.isEmpty()) {
-				response.setStatus(412);
+				response.setStatus(HttpStatus.SC_PRECONDITION_FAILED);
 			} else {
 				readComments(bearer, pid, uid, response);
 			}
