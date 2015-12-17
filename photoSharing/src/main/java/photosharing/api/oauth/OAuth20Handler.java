@@ -55,11 +55,10 @@ public class OAuth20Handler {
 	/**
 	 * Enumeration of the various grant types
 	 */
-	private enum GrantType{
-		Bearer,
-		authorization_code
+	private enum GrantType {
+		Bearer, authorization_code
 	};
-	
+
 	/**
 	 * Only one instance of this class is needed.
 	 */
@@ -92,13 +91,14 @@ public class OAuth20Handler {
 	 * /authorize?response_type=code&
 	 * client_id=app_example&callback_uri=http://localhost/callback
 	 * 
-	 * @param request current http request
+	 * @param request
+	 *            current http request
 	 * @return url to redirected to for authorization
 	 */
 	public String generateRedirect(HttpServletRequest request) {
 		Configuration config = Configuration.getInstance(request);
-		
-		//Builds the URL in a StringBuilder
+
+		// Builds the URL in a StringBuilder
 		StringBuilder builder = new StringBuilder();
 		builder.append(config.getValue(Configuration.BASEURL));
 		builder.append(AUTHURL);
@@ -110,42 +110,43 @@ public class OAuth20Handler {
 		builder.append("&");
 		builder.append("callback_uri=");
 		builder.append(config.getValue(Configuration.CALLBACKURL));
-		
+
 		return builder.toString();
 	}
 
 	/**
+	 * gets an access token based on the code
 	 * 
-	 * @param code - the >254 character code representing temporary credentials
+	 * @param code
+	 *            - the >254 character code representing temporary credentials
 	 * @return the OAuth 20 configuration for the user requesting
-	 * @throws IOException 
+	 * @throws IOException
 	 */
 	public OAuth20Data getAccessToken(String code) throws IOException {
 		logger.info("getAccessToken activated");
 		OAuth20Data oData = null;
-		
+
 		Configuration config = Configuration.getInstance(null);
-		
 		String body = this.generateAccessTokenRequestBody(
-				config.getValue(Configuration.CLIENTID), 
-				config.getValue(Configuration.CLIENTSECRET), 
-				config.getValue(Configuration.CALLBACKURL),
-				code);
-			
-		//Builds the URL in a StringBuilder
+				config.getValue(Configuration.CLIENTID),
+				config.getValue(Configuration.CLIENTSECRET),
+				config.getValue(Configuration.CALLBACKURL), code);
+
+		// Builds the URL in a StringBuilder
 		StringBuilder builder = new StringBuilder();
 		builder.append(config.getValue(Configuration.BASEURL));
 		builder.append(TOKENURL);
-		
+
 		Request post = Request.Post(builder.toString());
-		post.addHeader("Content-Type",ContentType.APPLICATION_FORM_URLENCODED.getMimeType());
+		post.addHeader("Content-Type",
+				ContentType.APPLICATION_FORM_URLENCODED.getMimeType());
 		post.body(new StringEntity(body));
-		
+
 		/**
 		 * Block is executed if there is a trace
 		 */
 		logger.info("URL Encoded body is " + body);
-		logger.info("Token URL is " +  builder.toString());
+		logger.info("Token URL is " + builder.toString());
 
 		/**
 		 * Executes with a wrapped executor
@@ -153,67 +154,159 @@ public class OAuth20Handler {
 		Executor exec = ExecutorUtil.getExecutor();
 		Response apiResponse = exec.execute(post);
 		HttpResponse hr = apiResponse.returnResponse();
-		
+
 		/**
-		 * Check the status codes and if 200, convert to String
-		 * and process the response body
+		 * Check the status codes and if 200, convert to String and process the
+		 * response body
 		 */
 		int statusCode = hr.getStatusLine().getStatusCode();
-		
+
 		if (statusCode == 200) {
 			InputStream in = hr.getEntity().getContent();
 			String x = IOUtils.toString(in);
 			oData = OAuth20Data.createInstance(x);
-		}
-		else{
+		} else {
 			logger.warning("OAuth20Data status code " + statusCode);
 		}
-		
+
 		return oData;
 	}
-	
+
 	/**
-	 * generates request body for the access token 
+	 * generates request body for the access token
 	 * 
-	 * @param clientId the client id of the third party application
-	 * @param clientSecret the confidential client secret for the third party application
-	 * @param callbackURI the callbackUri that is used by the third party application
-	 * @param code the >254 character code that is short lived
+	 * @param clientId
+	 *            the client id of the third party application
+	 * @param clientSecret
+	 *            the confidential client secret for the third party application
+	 * @param callbackURI
+	 *            the callbackUri that is used by the third party application
+	 * @param code
+	 *            the >254 character code that is short lived
 	 * @return {String} assembled request body
 	 */
-	public String generateAccessTokenRequestBody(String clientId, String clientSecret, String callbackURI, String code){
-		StringBuilder builder = new StringBuilder(); 
+	public String generateAccessTokenRequestBody(String clientId,
+			String clientSecret, String callbackURI, String code) {
+		StringBuilder builder = new StringBuilder();
 		builder.append("client_id=");
 		builder.append(clientId);
 		builder.append("&");
-		
+
 		builder.append("client_secret=");
 		builder.append(clientSecret);
 		builder.append("&");
-		
+
 		builder.append("callback_uri=");
 		try {
-			builder.append(URLEncoder.encode(callbackURI,"UTF-8"));
+			builder.append(URLEncoder.encode(callbackURI, "UTF-8"));
 		} catch (UnsupportedEncodingException e) {
-			logger.log(Level.WARNING,"Encoding issue " + callbackURI);
+			logger.log(Level.WARNING, "Encoding issue " + callbackURI);
 		}
 		builder.append("&");
-		
+
 		builder.append("code=");
 		builder.append(code);
 		builder.append("&");
-		
+
 		builder.append("grant_type=");
 		builder.append(GrantType.authorization_code.name());
 		return builder.toString();
 	}
 
 	/**
+	 * renews an access token with the user's data
 	 * 
-	 * @return
+	 * @param oData
+	 *            the current OAuth 2.0 data.
+	 * @return {OAuth20Data} or null
+	 * @throws IOException
 	 */
-	public OAuth20Data renewAccessToken() {
+	public OAuth20Data renewAccessToken(OAuth20Data oData) throws IOException {
 		logger.finest("renewAccessToken activated");
-		return new OAuth20Data();
+
+		Configuration config = Configuration.getInstance(null);
+		String body = this.generateRenewAccessTokenRequestBody(
+				oData.getAccessToken(), oData.getRefreshToken(),
+				oData.getIssuedOn(), oData.getExpiresIn());
+
+		// Builds the URL in a StringBuilder
+		StringBuilder builder = new StringBuilder();
+		builder.append(config.getValue(Configuration.BASEURL));
+		builder.append(TOKENURL);
+
+		Request post = Request.Post(builder.toString());
+		post.addHeader("Content-Type",
+				ContentType.APPLICATION_FORM_URLENCODED.getMimeType());
+		post.body(new StringEntity(body));
+
+		/**
+		 * Block is executed if there is a trace
+		 */
+		logger.info("URL Encoded body is " + body);
+		logger.info("Token URL is " + builder.toString());
+
+		/**
+		 * Executes with a wrapped executor
+		 */
+		Executor exec = ExecutorUtil.getExecutor();
+		Response apiResponse = exec.execute(post);
+		HttpResponse hr = apiResponse.returnResponse();
+
+		/**
+		 * Check the status codes and if 200, convert to String and process the
+		 * response body
+		 */
+		int statusCode = hr.getStatusLine().getStatusCode();
+
+		if (statusCode == 200) {
+			InputStream in = hr.getEntity().getContent();
+			String x = IOUtils.toString(in);
+			oData = OAuth20Data.createInstance(x);
+		} else {
+			logger.warning("OAuth20Data status code " + statusCode);
+		}
+
+		return oData;
+	}
+
+	/**
+	 * generates request body for the renew access token operation
+	 * 
+	 * @param accessToken
+	 *            The short-lived access token. The default life span of the
+	 *            token is two hours. The maximum number of characters is 256.
+	 * @param refreshToken
+	 *            A long-lived refresh token that can be used to obtain a new
+	 *            access token when the access token expires. The maximum number
+	 *            of characters is 256.
+	 * @param issuedOn
+	 *            The details of when the access token was created.
+	 * @param expiresIn
+	 *            The amount of time in milliseconds that the access token is
+	 *            valid.
+	 * @return {String} assembled request body
+	 */
+	public String generateRenewAccessTokenRequestBody(String accessToken,
+			String refreshToken, String issuedOn, String expiresIn) {
+		StringBuilder builder = new StringBuilder();
+		builder.append("access_token=");
+		builder.append(accessToken);
+		builder.append("&");
+
+		builder.append("refresh_token=");
+		builder.append(refreshToken);
+		builder.append("&");
+
+		builder.append("isseud_on=");
+		builder.append(issuedOn);
+		builder.append("&");
+
+		builder.append("expires_in=");
+		builder.append(expiresIn);
+		builder.append("&");
+
+		builder.append("grant_type=");
+		builder.append(GrantType.Bearer.name());
+		return builder.toString();
 	}
 }
