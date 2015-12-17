@@ -80,7 +80,7 @@ public class CallbackDefinition implements APIDefinition {
 					OAuth20Handler handler = OAuth20Handler.getInstance();
 					OAuth20Data oauthData = null;
 					try {
-						logger.warning("call to access token");
+						logger.info("call to access token");
 						oauthData = handler.getAccessToken(code);
 					} catch (IOException e1) {
 						logger.log(Level.WARNING,
