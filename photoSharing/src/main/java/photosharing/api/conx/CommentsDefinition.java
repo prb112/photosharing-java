@@ -27,6 +27,7 @@ import javax.servlet.http.HttpSession;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.entity.ByteArrayEntity;
@@ -36,6 +37,7 @@ import org.apache.wink.json4j.JSONObject;
 import org.xml.sax.SAXException;
 
 import photosharing.api.Configuration;
+import photosharing.api.ExecutorUtil;
 import photosharing.api.base.APIDefinition;
 import photosharing.api.oauth.OAuth20Data;
 
@@ -98,7 +100,8 @@ public class CommentsDefinition implements APIDefinition {
 	 * get nonce as described with nonce <a href="http://ibm.co/1fG83gY">Get a
 	 * Cryptographic Key</a>
 	 * 
-	 * @param bearer
+	 * @param bearer the access token
+	 * @return {String} the nonce
 	 */
 	private String getNonce(String bearer, HttpServletResponse response) {
 		String nonce = "";
@@ -108,7 +111,8 @@ public class CommentsDefinition implements APIDefinition {
 		get.addHeader("Authorization", "Bearer " + bearer);
 
 		try {
-			Response apiResponse = get.execute();
+			Executor exec = ExecutorUtil.getExecutor();
+			Response apiResponse = exec.execute(get);
 			HttpResponse hr = apiResponse.returnResponse();
 
 			/**
@@ -116,24 +120,24 @@ public class CommentsDefinition implements APIDefinition {
 			 */
 			int code = hr.getStatusLine().getStatusCode();
 
-			// Session is no longer valid or access token is expired
-			if (code == 403) {
-				response.sendRedirect("./api/logout");
+			// Checks the Status Code
+			if (code == HttpStatus.SC_FORBIDDEN) {
+				// Session is no longer valid or access token is expired
+				response.setStatus(HttpStatus.SC_FORBIDDEN);
+			}			
+			else if (code == HttpStatus.SC_UNAUTHORIZED) {
+				// User is not authorized
+				response.setStatus(HttpStatus.SC_UNAUTHORIZED);
 			}
-
-			// User is not authorized
-			else if (code == 401) {
-				response.setStatus(401);
-			}
-
-			else if (code == 200) {
+			else if (code == HttpStatus.SC_OK) {
+				// Default to 200
 				InputStream in = hr.getEntity().getContent();
 				nonce = IOUtils.toString(in);
 			}
 
 		} catch (IOException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
-			response.setStatus(500);
+			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 			logger.severe("Issue with get nonce " + e.toString());
 		}
 
@@ -161,7 +165,8 @@ public class CommentsDefinition implements APIDefinition {
 		delete.addHeader("X-Update-Nonce", nonce);
 
 		try {
-			Response apiResponse = delete.execute();
+			Executor exec = ExecutorUtil.getExecutor();
+			Response apiResponse = exec.execute(delete);
 			HttpResponse hr = apiResponse.returnResponse();
 
 			/**
@@ -169,24 +174,23 @@ public class CommentsDefinition implements APIDefinition {
 			 */
 			int code = hr.getStatusLine().getStatusCode();
 
-			// Session is no longer valid or access token is expired
-			if (code == 403) {
-				response.sendRedirect("./api/logout");
+			// Checks the Status Code
+			if (code == HttpStatus.SC_FORBIDDEN) {
+				// Session is no longer valid or access token is expired
+				response.setStatus(HttpStatus.SC_FORBIDDEN);
 			}
-
-			// User is not authorized
-			else if (code == 401) {
-				response.setStatus(401);
+			else if (code == HttpStatus.SC_UNAUTHORIZED) {
+				// User is not authorized
+				response.setStatus(HttpStatus.SC_UNAUTHORIZED);
 			}
-
-			// Default to 200
 			else {
-				response.setStatus(200);
+				// Default to 200
+				response.setStatus(HttpStatus.SC_OK);
 			}
 
 		} catch (IOException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
-			response.setStatus(500);
+			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 			logger.severe("Issue with delete comment" + e.toString());
 		}
 

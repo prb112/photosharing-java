@@ -83,7 +83,7 @@ public class LogoutDefinition implements APIDefinition {
 					//Catches Exception Related to a Request
 					logger.log(Level.SEVERE,"Exception Encountered");
 					response.setHeader("X-Application-Error", className);
-					response.setStatus(500);
+					response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 				} 
 				
 				//Indvalidates the User's current session and logs them out
