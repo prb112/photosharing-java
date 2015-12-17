@@ -26,6 +26,7 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.entity.ByteArrayEntity;
@@ -194,13 +195,13 @@ public class CommentsDefinition implements APIDefinition {
 	/**
 	 * updates a given comment
 	 * 
-	 * @param bearer
-	 * @param cid
-	 * @param pid
-	 * @param uid
-	 * @param body
-	 * @param nonce
-	 * @param response
+	 * @param bearer the accessToken
+	 * @param cid the comment id 
+	 * @param pid the file id
+	 * @param uid the library id
+	 * @param body the text body
+	 * @param nonce the nonce value
+	 * @param response the response that is going to get the response
 	 */
 	public void updateComment(String bearer, String cid, String pid,
 			String uid, String body, String nonce, HttpServletResponse response) {
@@ -228,20 +229,19 @@ public class CommentsDefinition implements APIDefinition {
 			 * Check the status codes
 			 */
 			int code = hr.getStatusLine().getStatusCode();
-
-			// Session is no longer valid or access token is expired
-			if (code == 403) {
-				response.sendRedirect("./api/logout");
+			
+			// Checks the status code for the response 
+			if (code == HttpStatus.SC_FORBIDDEN) {
+				// Session is no longer valid or access token is expired
+				response.setStatus(HttpStatus.SC_FORBIDDEN);
 			}
-
-			// User is not authorized
-			else if (code == 401) {
-				response.setStatus(401);
+			else if (code == HttpStatus.SC_UNAUTHORIZED) {
+				// User is not authorized
+				response.setStatus(HttpStatus.SC_UNAUTHORIZED);
 			}
-
-			// Default to 200
 			else {
-				response.setStatus(200);
+				// Default to 200
+				response.setStatus(HttpStatus.SC_OK);
 			}
 
 		} catch (IOException e) {
