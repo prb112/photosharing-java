@@ -63,7 +63,7 @@ public class CallbackDefinition implements APIDefinition {
 		HttpSession session = request.getSession();
 		if (session != null) {
 			String code = request.getParameter("code");
-
+			
 			// Checks to see if there is an oauth_error
 			String error = request.getParameter("oauth_error");
 			if (error != null) {
@@ -76,12 +76,11 @@ public class CallbackDefinition implements APIDefinition {
 				// or equal 254 characters per the flow
 				if (code != null && code.length() >= 254) {
 
-					logger.finest("Code : " + code);
-
 					// Accesses the OAuth 20 Data
 					OAuth20Handler handler = OAuth20Handler.getInstance();
 					OAuth20Data oauthData = null;
 					try {
+						logger.warning("call to access token");
 						oauthData = handler.getAccessToken(code);
 					} catch (IOException e1) {
 						logger.log(Level.WARNING,

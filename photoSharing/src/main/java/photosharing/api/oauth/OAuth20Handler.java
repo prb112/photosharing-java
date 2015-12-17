@@ -140,6 +140,12 @@ public class OAuth20Handler {
 		Request post = Request.Post(builder.toString());
 		post.addHeader("Content-Type",ContentType.APPLICATION_FORM_URLENCODED.getMimeType());
 		post.body(new StringEntity(body));
+		
+		/**
+		 * Block is executed if there is a trace
+		 */
+		logger.info("URL Encoded body is " + body);
+		logger.info("Token URL is " +  builder.toString());
 
 		/**
 		 * Executes with a wrapped executor
@@ -153,12 +159,14 @@ public class OAuth20Handler {
 		 * and process the response body
 		 */
 		int statusCode = hr.getStatusLine().getStatusCode();
-		logger.info("status code " + statusCode);
 		
 		if (statusCode == 200) {
 			InputStream in = hr.getEntity().getContent();
 			String x = IOUtils.toString(in);
 			oData = OAuth20Data.createInstance(x);
+		}
+		else{
+			logger.warning("OAuth20Data status code " + statusCode);
 		}
 		
 		return oData;
@@ -195,7 +203,7 @@ public class OAuth20Handler {
 		builder.append(code);
 		builder.append("&");
 		
-		builder.append("grant-type=");
+		builder.append("grant_type=");
 		builder.append(GrantType.authorization_code.name());
 		return builder.toString();
 	}
