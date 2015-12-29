@@ -11,15 +11,16 @@
 	</welcome-file-list>
 	<session-config>
 		<!--
-		  Timeout is set to 60 minutes, along with the max-age for the cookie being 60 minutes. 
-		  The max age should be inline with IBM Connections Cloud max login age of 18 hours.
-		  -->
+			Timeout is set to 60 minutes, along with the max-age for the cookie being 60 minutes. 
+			The max age should be inline with IBM Connections Cloud max login age of 18 hours.
+		-->
 		<session-timeout>60</session-timeout>
 		<cookie-config>
 			<http-only>true</http-only>
 			<secure>true</secure>
 			<max-age>60</max-age>
 		</cookie-config>
+		<tracking-mode>COOKIE</tracking-mode>
 	</session-config>
 	<deny-uncovered-http-methods />
 	
@@ -41,11 +42,23 @@
 	</security-constraint>
 	<login-config>
 		<auth-method>BASIC</auth-method>
-		<realm-name>photosharing</realm-name>
 	</login-config>
 	<context-param>
 		<description>The Application Configuration that stores the properties needed to access IBM Connections Cloud</description>
 		<param-name>AppConfig</param-name>
 		<param-value>/WEB-INF/appconfig.properties</param-value>
 	</context-param>
+	<servlet>
+		<description>
+			Login Servlet which is not security constrained
+		</description>
+		<display-name>Login Servlet</display-name>
+		<icon>
+			<small-icon />
+			<large-icon />
+		</icon>
+		<servlet-name>LoginServlet</servlet-name>
+		<servlet-class>photosharing.api.LoginServlet</servlet-class>
+		<enabled>true</enabled>
+	</servlet>
 </web-app>
