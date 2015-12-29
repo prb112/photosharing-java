@@ -14,7 +14,7 @@
  * implied. See the License for the specific language governing 
  * permissions and limitations under the License.
 -->
-<html>
+<html ng-app="photoApp" ng-init="">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
@@ -54,10 +54,11 @@
   <script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.0/jquery.justifiedGallery.js"></script>
 
   <!-- PhotoSharing JavaScript --> 
-  <script src="./js/main.js"></script>
+  <script src="./js/app.js"></script>
+  <script src="./js/controllers.js"></script>
   
 </head>
-<body ng-app="photoApp" ng-init="">
+<body>
 
 <!--Calls back to navbarController, and creates the navbar fixed at the top of the screen-->
 <nav ng-controller="NavbarController" id="navStyle" class="navbar navbar-fixed-top" role="navigation">
@@ -118,14 +119,14 @@
       <ul class="nav navbar-nav navbar-right">
         
         <!-- Upload -->
-        <li class="navbarButton" ng-click="select()" ng-show="loggedin" ng-controller='UploadController'>
+        <li class="navbarButton" ng-click="select()" ng-show="$rootScope.loggedin" ng-controller='UploadController'>
           <a ng-click="openUploadDialog()" href=""><span class="glyphicon glyphicon-upload"></span>
             <!--Display on glyphicon when screen gets smaller-->
             <text class="uploadButton" ng-show="mediumScreen">Upload</text>
           </a>
         </li>
         
-        <li ng-show="loggedin">
+        <li ng-show="$rootScope.loggedin">
           <!--Displays the search bar and defines its functionality-->
           <form class="searchBar navbar-form" role="search" ng-controller="SearchController">
             <div style="position: relative" class="form-group input-group stylish-input-group">
@@ -153,7 +154,7 @@
         </li>
 
         <!--Displays the login button-->
-        <li class="navbarButton logIn" ng-if="!loggedin" ng-controller="NavigationButtonController">
+        <li class="navbarButton logIn" ng-show="false" ng-controller="NavigationButtonController">
           <a ng-click="login()" href="">
               <span class="glyphicon glyphicon-log-in"></span>
               <!--Display on glyphicon when screen gets smaller-->
@@ -162,7 +163,7 @@
         </li>
           
         <!--Displays the logout button-->
-        <li class="navbarButton logOut" ng-if="loggedin" ng-controller="NavigationButtonController">
+        <li class="navbarButton logOut" ng-show="$rootScope.loggedin" ng-controller="NavigationButtonController">
           <a ng-click="logout()" href="">
               <span class="glyphicon glyphicon-log-out"></span>
               <!--Display on glyphicon when screen gets smaller-->
@@ -175,6 +176,9 @@
     </div>
 </nav>
 
-
+<div class="view-animate-container location-main">
+    <div ng-view class="view-animate page page-home"/>
+</div>
+  
 </body>
 </html>

@@ -3,6 +3,12 @@
   text-align: center  !important;
 }
 
+
+.login-location {
+	margin-left: 10px;
+	margin-top: 65px;
+}
+
 /* Styling for logIn button */
 .logIn {
   margin-right: 10px;

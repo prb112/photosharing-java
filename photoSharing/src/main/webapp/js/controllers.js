@@ -109,17 +109,19 @@ photoApp.controller('NavbarController', function($location, $scope, $rootScope,
 photoApp.controller('NavigationButtonController', function($location, $scope, $rootScope,
 		$http, $route, $routeParams, $cookies, $uibModal, $log, $window) {
 	
+	//Sets the Default to logged out
+	$rootScope.loggedin = false;
+	
 	//Logs in the User
 	$scope.login = function(){
-		$log.debug("Logging in the User");
-		//if testing, $rootScope.loggedin = true;
-		$rootScope.loggedin = true;
-		$rootScope.loginDialog = true;
+		$log.info("Logging in the User");
+		$rootScope.loggedin = false;
+		$location.url('/login');
 	};
 	
 	//Logs out the User.  
 	$scope.logout = function(){
-		$log.debug("Logging out the User and destroying the server session");
+		$log.info("Logging out the User and destroying the server session");
 		$rootScope.loggedin = false;
 		
 		/**
@@ -217,62 +219,54 @@ photoApp.controller('SearchController', function($location, $scope, $rootScope,
 });
 
 /**
- * Manages the Modal Dialog for login 
+ * Manages the Login
  */
-photoApp.controller('LoginModalDialogController', function($scope, $rootScope, $uibModal, $log) {
-	  $scope.animationsEnabled = true;
-
-	  /**
-	   * launches the loginDialog when the loginDialog value changes 
-	   */
-	  $scope.$watch('loginDialog', function(){
-		  $log.info("login dialog status changed");
-		  
-		  //Create the Modal Instance
-		  var modalInstance = $uibModal.open({
-		      animation: $scope.animationsEnabled,
-		      templateUrl: './templates/login-template.tpl',
-		      controller: 'ModalInstanceController',
-		      size: 'sm',
-		      resolve:{
-		    	  
-		      }
-		    });
-		  
-		  	modalInstance.result.then(function (selectedItem){
-		  		$log.info("loggin");
-		  	}, function(){
-		  		$log.info('modal dialog dismissed at: ' + new Date());
-		  	});
-		  
-	  });
-	  
-	  $scope.toggleAnimation = function () {
-	    $scope.animationsEnabled = !$scope.animationsEnabled;
-	  };
+photoApp.controller('LoginController', function($location, $scope, $rootScope,
+		$http, $route, $routeParams, $log) {
+	
+	// Login Function
+	$scope.login = function(userx){
+		//Logs details only if info is setup. 
+		$log.info("Submitted Login Details");
+		$log.info("- " + $scope.user.userloginname);
+		$log.info("- " + $scope.user.userpassword);
+		
+		//Calls the api Login
+		var url = "./api/login";
+		var basicAuth = "Basic " + window.btoa($scope.user.userloginname + ":" + $scope.user.userpassword);
+		var config = {
+				method : "GET",
+				headers : {
+					'Authorization' :  basicAuth ,
+					'X-Requested-With' : 'XMLHttpRequest'
+				}
+		};
+		
+		$http.get(url, config).then(function(response){
+			$rootScope.loggedin = true;
+		}, function(response){
+			$log.info("issue logging in");
+			// If there is an error, set the alert
+			$scope.alert = true;
+		});
+		
+	};
+		
 });
+
 
 /**
- * Actions for the Login Modal Dialog
+ * Configuration for the photoApp
  */
-photoApp.controller('ModalInstanceController', function ($scope, $uibModalInstance) {
-	  
-	  $scope.ok = function () {
-		$uibModalInstance.close('close');
-	  };
+photoApp.config([ '$routeProvider', 
+        function($routeProvider, $locationProvider) {
 
-	  $scope.cancel = function () {
-	    $uibModalInstance.dismiss('cancel');
-	  };
-});
-
-
-
-
-
-
-
-
-
-
+	$routeProvider.when('/', {
+		// Defaults to the Login View
+		templateUrl : "views/login.html"
+	}).otherwise({ //Defaults to / 
+		redirectTo : "/"
+	});
+	
+}]);
 

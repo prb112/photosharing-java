@@ -57,8 +57,7 @@ public class CommentsDefinition implements APIDefinition {
 	/**
 	 * generate the base api url for files
 	 * 
-	 * @param userid
-	 * @return url representing the api
+	 * @return {String} url representing the api
 	 */
 	private String getApiUrl() {
 		Configuration config = Configuration.getInstance(null);
@@ -71,8 +70,8 @@ public class CommentsDefinition implements APIDefinition {
 	/**
 	 * creates the formatted comment
 	 * 
-	 * @param content
-	 * @return xml representing a comment
+	 * @param content the string representing the comment
+	 * @return {String} xml representing a comment
 	 */
 	private String generateComment(String content) {
 		StringBuilder builder = new StringBuilder();
@@ -86,7 +85,7 @@ public class CommentsDefinition implements APIDefinition {
 	 * gets the nonce url <a href="http://ibm.co/1fG83gY">Get a Cryptographic
 	 * Key</a>
 	 * 
-	 * @return URL to get Nonce
+	 * @return {String} URL to get Nonce
 	 */
 	private String getNonceUrl() {
 		Configuration config = Configuration.getInstance(null);
@@ -259,12 +258,12 @@ public class CommentsDefinition implements APIDefinition {
 	/**
 	 * creates a new comment with a given library id and document id
 	 * 
-	 * @param bearer
-	 * @param pid
-	 * @param uid
-	 * @param body
-	 * @param nonce
-	 * @param response
+	 * @param bearer the accesstoken used to make the request
+	 * @param pid the document id
+	 * @param uid the library id
+	 * @param body the body of the comment
+	 * @param nonce the nonce code
+	 * @param response the http response that the results are sent to
 	 */
 	public void createComment(String bearer, String pid, String uid,
 			String body, String nonce, HttpServletResponse response) {
@@ -295,19 +294,18 @@ public class CommentsDefinition implements APIDefinition {
 			 */
 			int code = hr.getStatusLine().getStatusCode();
 
-			// Session is no longer valid or access token is expired
-			if (code == 403) {
-				response.sendRedirect("./api/logout");
+			//Process the Status Codes
+			if (code == HttpStatus.SC_FORBIDDEN) {
+				// Session is no longer valid or access token is expired
+				response.setStatus(HttpStatus.SC_FORBIDDEN);
 			}
-
-			// User is not authorized
-			else if (code == 401) {
-				response.setStatus(401);
+			else if (code == HttpStatus.SC_UNAUTHORIZED) {
+				// User is not authorized
+				response.setStatus(HttpStatus.SC_UNAUTHORIZED);
 			}
-
-			// Default to 200
-			else if (code == 201) {
-				response.setStatus(200);
+			else if (code == HttpStatus.SC_CREATED) {
+				// Default to 201
+				response.setStatus(HttpStatus.SC_OK);
 
 				InputStream in = hr.getEntity().getContent();
 				String jsonString = org.apache.wink.json4j.utils.XML.toJson(in);

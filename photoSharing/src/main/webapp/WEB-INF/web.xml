@@ -10,10 +10,15 @@
 		<welcome-file>default.jsp</welcome-file>
 	</welcome-file-list>
 	<session-config>
-		<session-timeout>480</session-timeout>
+		<!--
+		  Timeout is set to 60 minutes, along with the max-age for the cookie being 60 minutes. 
+		  The max age should be inline with IBM Connections Cloud max login age of 18 hours.
+		  -->
+		<session-timeout>60</session-timeout>
 		<cookie-config>
 			<http-only>true</http-only>
 			<secure>true</secure>
+			<max-age>60</max-age>
 		</cookie-config>
 	</session-config>
 	<deny-uncovered-http-methods />
