@@ -43,7 +43,7 @@ import photosharing.api.oauth.OAuth20Data;
 
 /**
  * The class calls the API for a File Comments in IBM Connections <a
- * href="">File Comments API</a>
+ * href="http://ibm.co/1S6f2AW">File Comments API</a>
  * 
  * @author Paul Bastide <pbastide@us.ibm.com>
  * 
@@ -82,7 +82,7 @@ public class CommentsDefinition implements APIDefinition {
 	}
 
 	/**
-	 * gets the nonce url <a href="http://ibm.co/1fG83gY">Get a Cryptographic
+	 * gets the nonce url so one can <a href="http://ibm.co/1fG83gY">Get a Cryptographic
 	 * Key</a>
 	 * 
 	 * @return {String} URL to get Nonce
