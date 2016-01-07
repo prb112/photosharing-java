@@ -183,6 +183,7 @@ photoApp.controller('UploadController', function($location, $scope, $rootScope,
 	//Logs in the User
 	$scope.openUploadDialog = function(){
 		$log.log("open dialog for upload photo");
+		$location.url("/upload");
 		
 	};
 		
