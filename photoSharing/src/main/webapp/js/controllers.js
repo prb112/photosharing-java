@@ -123,13 +123,14 @@ photoApp.controller('NavigationButtonController', function($location, $scope, $r
 	$scope.logout = function(){
 		$log.info("Logging out the User and destroying the server session");
 		$rootScope.loggedin = false;
+		$location.url("");
 		
 		/**
 		 * Calls the Logout Method
 		 */
 		$http({
 			method: 'GET',
-			url: "./api/logout"
+			url: "./logout"
 		}).then(function success(response){
 			if(status == 200){
 				//Success, the logged in flip happened

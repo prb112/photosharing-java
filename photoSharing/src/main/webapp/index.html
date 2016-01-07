@@ -119,14 +119,14 @@
       <ul class="nav navbar-nav navbar-right">
         
         <!-- Upload -->
-        <li class="navbarButton" ng-click="select()" ng-show="$rootScope.loggedin" ng-controller='UploadController'>
+        <li class="navbarButton" ng-click="select()" ng-show="loggedin" ng-controller='UploadController'>
           <a ng-click="openUploadDialog()" href=""><span class="glyphicon glyphicon-upload"></span>
             <!--Display on glyphicon when screen gets smaller-->
             <text class="uploadButton" ng-show="mediumScreen">Upload</text>
           </a>
         </li>
         
-        <li ng-show="$rootScope.loggedin">
+        <li ng-show="loggedin">
           <!--Displays the search bar and defines its functionality-->
           <form class="searchBar navbar-form" role="search" ng-controller="SearchController">
             <div style="position: relative" class="form-group input-group stylish-input-group">
@@ -163,7 +163,7 @@
         </li>
           
         <!--Displays the logout button-->
-        <li class="navbarButton logOut" ng-show="$rootScope.loggedin" ng-controller="NavigationButtonController">
+        <li class="navbarButton logOut" ng-show="loggedin" ng-controller="NavigationButtonController">
           <a ng-click="logout()" href="">
               <span class="glyphicon glyphicon-log-out"></span>
               <!--Display on glyphicon when screen gets smaller-->
