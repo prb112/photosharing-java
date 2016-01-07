@@ -25,6 +25,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpStatus;
@@ -62,12 +63,17 @@ public class LoginServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		
 		/*
-		 * Checks to see if the User is logged in
-		 * - forces logout 
+		 * Checks to see if the User is logged in forces logout for any existing user, you wouldn't actually do this in production
 		 */
 		Principal user = request.getUserPrincipal();
 		if(user != null){
+			HttpSession session = request.getSession(false);
+			if(session != null){
+				session.invalidate();
+			}
+			
 			request.logout();
+			
 		}
 		
 		/*

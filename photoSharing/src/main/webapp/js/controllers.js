@@ -244,6 +244,7 @@ photoApp.controller('LoginController', function($location, $scope, $rootScope,
 		
 		$http.get(url, config).then(function(response){
 			$rootScope.loggedin = true;
+			$location.url("/public");
 		}, function(response){
 			$log.info("issue logging in");
 			// If there is an error, set the alert
@@ -264,6 +265,14 @@ photoApp.config([ '$routeProvider',
 	$routeProvider.when('/', {
 		// Defaults to the Login View
 		templateUrl : "views/login.html"
+	}).when('/public', {
+		templateUrl : "views/home.html"
+	}).when('/private', {
+		templateUrl : "views/private.html"
+	}).when('/upload', {
+		templateUrl : "views/modal-upload.html"
+	}).when('/myphotos', {
+		templateUrl : "views/photo.html"
 	}).otherwise({ //Defaults to / 
 		redirectTo : "/"
 	});
