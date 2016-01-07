@@ -16,6 +16,7 @@
 package photosharing.api;
 
 import java.io.IOException;
+import java.security.Principal;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
@@ -24,6 +25,9 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.codec.binary.Base64;
+import org.apache.http.HttpStatus;
 
 /**
  * Servlet implementation class LoginServlet
@@ -56,8 +60,40 @@ public class LoginServlet extends HttpServlet {
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		String username = "";
-		String password = "";
-		request.login(username, password);
+		
+		/*
+		 * Checks to see if the User is logged in
+		 * - forces logout 
+		 */
+		Principal user = request.getUserPrincipal();
+		if(user != null){
+			request.logout();
+		}
+		
+		/*
+		 * Authorizes the User
+		 */
+		String auth = request.getHeader("Authorization");
+		
+		if(auth != null && !auth.isEmpty() ){
+			auth = auth.replace("Basic ","");
+			
+			String authDecoded = new String(Base64.decodeBase64(auth));
+			
+			String[] creds = authDecoded.split(":");
+			String username = creds[0];
+			String password = creds[1];
+			try{
+				request.login(username, password);
+			}catch(Exception e){
+				response.setStatus(HttpStatus.SC_UNAUTHORIZED);
+			}
+						
+			
+		}else{
+			response.setStatus(HttpStatus.SC_BAD_REQUEST);
+		}
+		
+		
 	}
 }

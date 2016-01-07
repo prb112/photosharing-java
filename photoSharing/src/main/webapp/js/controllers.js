@@ -232,7 +232,7 @@ photoApp.controller('LoginController', function($location, $scope, $rootScope,
 		$log.info("- " + $scope.user.userpassword);
 		
 		//Calls the api Login
-		var url = "./api/login";
+		var url = "./login";
 		var basicAuth = "Basic " + window.btoa($scope.user.userloginname + ":" + $scope.user.userpassword);
 		var config = {
 				method : "GET",
