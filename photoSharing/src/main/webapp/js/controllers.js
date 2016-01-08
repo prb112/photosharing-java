@@ -258,12 +258,12 @@ photoApp.controller('LoginController', function($location, $scope, $rootScope,
 });
 
 /**
- * launches the OAuth flow
+ * launches the OAuth flow in a new window
  */
 photoApp.controller('OAuthController', function($scope,$window) {
 	
 	$scope.launch = function(){
-		$window.open('./api/auth','newwindow','width=640, height=480');
+		$window.open('./api/auth','newwindow','width=740, height=480');
 		
 	};
 		
