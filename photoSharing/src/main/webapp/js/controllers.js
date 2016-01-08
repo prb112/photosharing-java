@@ -116,7 +116,7 @@ photoApp.controller('NavigationButtonController', function($location, $scope, $r
 	$scope.login = function(){
 		$log.info("Logging in the User");
 		$rootScope.loggedin = false;
-		$location.url('/login');
+		$location.url('/oauth');
 	};
 	
 	//Logs out the User.  
@@ -246,7 +246,7 @@ photoApp.controller('LoginController', function($location, $scope, $rootScope,
 		
 		$http.get(url, config).then(function(response){
 			$rootScope.loggedin = true;
-			$location.url("/public");
+			$location.url("/oauth");
 		}, function(response){
 			$log.info("issue logging in");
 			// If there is an error, set the alert
@@ -257,6 +257,17 @@ photoApp.controller('LoginController', function($location, $scope, $rootScope,
 		
 });
 
+/**
+ * launches the OAuth flow
+ */
+photoApp.controller('OAuthController', function($scope,$window) {
+	
+	$scope.launch = function(){
+		$window.open('./api/auth','newwindow','width=640, height=480');
+		
+	};
+		
+});
 
 /**
  * Configuration for the photoApp
@@ -275,6 +286,8 @@ photoApp.config([ '$routeProvider',
 		templateUrl : "views/modal-upload.html"
 	}).when('/myphotos', {
 		templateUrl : "views/photo.html"
+	}).when('/oauth', {
+		templateUrl : "views/oauth.html"
 	}).otherwise({ //Defaults to / 
 		redirectTo : "/"
 	});

@@ -16,6 +16,7 @@
 package photosharing.api.oauth;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -98,9 +99,11 @@ public class CallbackDefinition implements APIDefinition {
 								.getMimeType());
 						response.setStatus(HttpStatus.SC_OK);
 
-						// Redirects back to the logged in experience
+						// Closes the Popup window
 						try {
-							response.sendRedirect("../index.html");
+							response.setContentType("text/html");
+							PrintWriter out = response.getWriter();
+							out.println("<html><body onload=\"javascript:window.close()\"></body></html>");
 						} catch (IOException e) {
 							logger.log(Level.WARNING,
 									"IOException on Redirect " + e.toString());
