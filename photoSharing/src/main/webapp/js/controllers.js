@@ -281,11 +281,12 @@ photoApp.controller('OAuthController', function($scope,$window,$http,$timeout,$c
 			if(response.status == '200'){
 				$location.url("/public");
 			}
-		}, function(error){
-			if(error.status == '204'){
+			else if(error.status == '204'){
 				$log.info("Waiting on Credentials");
 				$timeout($scope.polling, 3000);
 			}
+		}, function(error){
+			$log.info("Issue getting the credentials and failing silently");
 		});
 	};
 	
