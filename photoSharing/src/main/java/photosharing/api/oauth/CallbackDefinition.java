@@ -91,16 +91,13 @@ public class CallbackDefinition implements APIDefinition {
 					// Checks the OAuth 2.0 data
 					if (oauthData != null) {
 						// When there is credential data persist in the session
-						// and
-						// return SC_OK with no body
-						session.setAttribute("credentials", oauthData);
-
-						response.setContentType(ContentType.APPLICATION_JSON
-								.getMimeType());
-						response.setStatus(HttpStatus.SC_OK);
+						// and return SC_OK 
+						logger.warning("oauthdata is now in the session");
+						session.setAttribute(OAuth20Handler.CREDENTIALS, oauthData);
 
 						// Closes the Popup window
 						try {
+							response.setStatus(HttpStatus.SC_OK);
 							response.setContentType("text/html");
 							PrintWriter out = response.getWriter();
 							out.println("<html><body onload=\"javascript:window.close()\"></body></html>");

@@ -30,6 +30,7 @@ import photosharing.api.conx.SearchTagsDefinition;
 import photosharing.api.conx.UploadFileDefinition;
 import photosharing.api.oauth.CallbackDefinition;
 import photosharing.api.oauth.OAuthDefinition;
+import photosharing.api.oauth.PollingDefinition;
 
 /**
  * API Registry to isolate the how in each call 
@@ -51,6 +52,7 @@ public class ApiRegistry {
 	static{
 		definitions.put("*", (APIDefinition)new MockDefinition());
 		definitions.put("/auth", (APIDefinition) new OAuthDefinition());
+		definitions.put("/poll", (APIDefinition) new PollingDefinition());
 		definitions.put("/logout", (APIDefinition) new LogoutDefinition());
 		definitions.put("/image*", (APIDefinition) new ImageDefinition());
 		definitions.put("/searchPeople", (APIDefinition) new SearchPeopleDefinition());

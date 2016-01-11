@@ -260,11 +260,23 @@ photoApp.controller('LoginController', function($location, $scope, $rootScope,
 /**
  * launches the OAuth flow in a new window
  */
-photoApp.controller('OAuthController', function($scope,$window) {
+photoApp.controller('OAuthController', function($scope,$window,$http,$timeout,$log) {
+	$scope.polling = function(){
+		$http.get('./api/poll').then(function(response){
+			if(response.status == '200'){
+				$location.url("/home");
+			}
+		}, function(error){
+			if(error.status == '400'){
+				$log.info("Waiting on Credentials");
+				$timeout($scope.polling, 1000);
+			}
+		});
+	};
 	
 	$scope.launch = function(){
 		$window.open('./api/auth','newwindow','width=740, height=480');
-		
+		$timeout($scope.polling, 3000);
 	};
 		
 });
