@@ -267,7 +267,7 @@ photoApp.controller('OAuthController', function($scope,$window,$http,$timeout,$l
 				$location.url("/home");
 			}
 		}, function(error){
-			if(error.status == '400'){
+			if(error.status == '204'){
 				$log.info("Waiting on Credentials");
 				$timeout($scope.polling, 3000);
 			}

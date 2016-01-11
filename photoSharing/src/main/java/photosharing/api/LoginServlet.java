@@ -48,7 +48,7 @@ public class LoginServlet extends HttpServlet {
     }
 
 	/**
-	 * intializes the servlet
+	 * Initializes the servlet
 	 * @see Servlet#init(ServletConfig)
 	 */
 	public void init(ServletConfig config) throws ServletException {

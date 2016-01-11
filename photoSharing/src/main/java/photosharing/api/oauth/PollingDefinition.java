@@ -28,6 +28,7 @@ import photosharing.api.base.APIDefinition;
 
 /**
  * Polling checks the session to see if there is a valid OAuth Credential 
+ * 
  * @author Paul Bastide <pbastide@us.ibm.com>
  * 
  */
@@ -47,7 +48,6 @@ public class PollingDefinition implements APIDefinition {
 	 */
 	public void run(HttpServletRequest request, HttpServletResponse response) {
 		
-		
 		HttpSession session = request.getSession(false);
 		if (session != null) {
 			
@@ -66,8 +66,8 @@ public class PollingDefinition implements APIDefinition {
 				}
 				
 			}else{
-				logger.log(Level.WARNING, "Error on getting credentials - no credentials");
-				response.setStatus(HttpStatus.SC_BAD_REQUEST);
+				logger.log(Level.WARNING, "No Credentials");
+				response.setStatus(HttpStatus.SC_NO_CONTENT);
 			} 
 
 		} else {
