@@ -39,6 +39,7 @@ photoApp.controller('NavbarController', function($location, $scope, $rootScope,
 		$rootScope.loggedin = true;
 	}else{
 		$rootScope.loggedin = false;
+		$location.url("");
 	}
 		
 	$rootScope.state = 'public';
@@ -60,6 +61,12 @@ photoApp.controller('NavbarController', function($location, $scope, $rootScope,
 		} else {
 			$rootScope.hueIndex++;
 		}
+		
+		// Reset to login Page
+		if(!$rootScope.loggedin){
+			$location.url("");
+		}
+		
 	});
 
 	// Turns animation to the inverse state
@@ -260,11 +267,19 @@ photoApp.controller('LoginController', function($location, $scope, $rootScope,
 /**
  * launches the OAuth flow in a new window
  */
-photoApp.controller('OAuthController', function($scope,$window,$http,$timeout,$log) {
+photoApp.controller('OAuthController', function($scope,$window,$http,$timeout,$cookies,$location,$log) {
 	$scope.polling = function(){
-		$http.get('./api/poll').then(function(response){
+		
+		$log.warn("Cookie: " + $cookies.get('JSESSIONID'));
+		
+		var config = {
+				method: "GET",
+				withCredentials: true
+		};
+		
+		$http.get('./api/poll',config).then(function(response){
 			if(response.status == '200'){
-				$location.url("/home");
+				$location.url("/public");
 			}
 		}, function(error){
 			if(error.status == '204'){
@@ -285,7 +300,7 @@ photoApp.controller('OAuthController', function($scope,$window,$http,$timeout,$l
  * Configuration for the photoApp
  */
 photoApp.config([ '$routeProvider', 
-        function($routeProvider, $locationProvider) {
+                  function($routeProvider, $locationProvider) {
 
 	$routeProvider.when('/', {
 		// Defaults to the Login View

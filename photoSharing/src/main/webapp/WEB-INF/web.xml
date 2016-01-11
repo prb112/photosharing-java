@@ -16,8 +16,11 @@
 		-->
 		<session-timeout>60</session-timeout>
 		<cookie-config>
-			<http-only>true</http-only>
-			<secure>true</secure>
+			<!--
+			Since the JS is loaded from CDN, http-only and secure are set to false. 
+			 -->
+			<http-only>false</http-only>
+			<secure>false</secure>
 			<max-age>60</max-age>
 		</cookie-config>
 		<tracking-mode>COOKIE</tracking-mode>

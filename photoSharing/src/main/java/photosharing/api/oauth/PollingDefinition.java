@@ -56,9 +56,7 @@ public class PollingDefinition implements APIDefinition {
 			if(oData != null){
 				
 				String oName = oData.getClass().getSimpleName();
-				logger.warning("" + oName);
 				if(oName.contains("OAuth20Data")){
-					logger.log(Level.INFO, "Credentials found");
 					response.setStatus(HttpStatus.SC_OK);
 				}else{
 					logger.log(Level.WARNING, "Error on getting credentials - bad value for odata");
