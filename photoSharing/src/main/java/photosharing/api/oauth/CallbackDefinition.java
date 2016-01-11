@@ -72,9 +72,8 @@ public class CallbackDefinition implements APIDefinition {
 				response.setStatus(HttpStatus.SC_BAD_REQUEST);
 				
 			} else {
-				// Code should not be null and the length should be greater than
-				// or equal 254 characters per the flow
-				if (code != null && code.length() >= 254) {
+				// Code should not be null
+				if (code != null) {
 
 					// Accesses the OAuth 20 Data
 					OAuth20Handler handler = OAuth20Handler.getInstance();

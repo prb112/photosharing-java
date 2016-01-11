@@ -72,7 +72,7 @@ public class PollingDefinition implements APIDefinition {
 
 		} else {
 			// When there is no session, set SC_BAD_REQUEST
-			logger.log(Level.WARNING, "Invalid Session");
+			logger.log(Level.WARNING, "Invalid Session - Cookie found/exists - " + request.getHeader("Cookie"));
 			response.setStatus(HttpStatus.SC_BAD_REQUEST);
 		}
 
