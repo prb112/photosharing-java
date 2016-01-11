@@ -48,10 +48,11 @@ public class PollingDefinition implements APIDefinition {
 	public void run(HttpServletRequest request, HttpServletResponse response) {
 		
 		
-		HttpSession session = request.getSession();
+		HttpSession session = request.getSession(false);
 		if (session != null) {
 			
 			Object oData = session.getAttribute(OAuth20Handler.CREDENTIALS);
+			
 			if(oData != null){
 				
 				String oName = oData.getClass().getSimpleName();

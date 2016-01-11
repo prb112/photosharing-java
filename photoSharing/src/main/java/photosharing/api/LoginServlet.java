@@ -91,6 +91,7 @@ public class LoginServlet extends HttpServlet {
 			String password = creds[1];
 			try{
 				request.login(username, password);
+				request.getSession(true);
 			}catch(Exception e){
 				response.setStatus(HttpStatus.SC_UNAUTHORIZED);
 			}

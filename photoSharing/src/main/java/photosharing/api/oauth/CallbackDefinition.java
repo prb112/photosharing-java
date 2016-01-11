@@ -25,7 +25,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.http.HttpStatus;
-import org.apache.http.entity.ContentType;
 
 import photosharing.api.Configuration;
 import photosharing.api.base.APIDefinition;
@@ -61,7 +60,7 @@ public class CallbackDefinition implements APIDefinition {
 		@SuppressWarnings("unused")
 		Configuration config = Configuration.getInstance(request);		
 		
-		HttpSession session = request.getSession();
+		HttpSession session = request.getSession(true);
 		if (session != null) {
 			String code = request.getParameter("code");
 			
@@ -92,9 +91,8 @@ public class CallbackDefinition implements APIDefinition {
 					if (oauthData != null) {
 						// When there is credential data persist in the session
 						// and return SC_OK 
-						logger.warning("oauthdata is now in the session");
 						session.setAttribute(OAuth20Handler.CREDENTIALS, oauthData);
-
+							
 						// Closes the Popup window
 						try {
 							response.setStatus(HttpStatus.SC_OK);
