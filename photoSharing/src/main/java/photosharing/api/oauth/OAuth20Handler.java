@@ -53,7 +53,7 @@ public class OAuth20Handler {
 	public final static String AUTHURL = "/manage/oauth2/authorize";
 	
 	//Variable used in the Session Scope
-	public static final String CREDENTIALS = "credentials";
+	public static final String CREDENTIALS = "oauthdata";
 
 	/**
 	 * Enumeration of the various grant types
