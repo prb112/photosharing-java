@@ -52,14 +52,28 @@ public class ProfileDefinition implements APIDefinition {
 
 	/**
 	 * generate the api url with a given userid
+	 * the format is atom and supports json (change atom to json)
 	 * 
 	 * @param userid
-	 * @return
+	 * @return url of the api
 	 */
 	private String getApiUrl(String userid) {
 		Configuration config = Configuration.getInstance(null);
 		String apiUrl = config.getValue(Configuration.BASEURL)
 				+ "/profiles/atom/profile.do?userid=" + userid;
+		return apiUrl;
+	}
+	
+	/**
+	 * generates the api url to retrieve the logged in user id
+	 * the format is atom/xml
+	 * 
+	 * @return url of the service api
+	 */
+	private String getApiUrlForServiceDoc(){
+		Configuration config = Configuration.getInstance(null);
+		String apiUrl = config.getValue(Configuration.BASEURL)
+				+ "/profiles/atom/profileService.do";
 		return apiUrl;
 	}
 
@@ -91,7 +105,12 @@ public class ProfileDefinition implements APIDefinition {
 		/**
 		 * The query should be cleansed before passing it to the backend
 		 */
-		Request get = Request.Get(getApiUrl(query));
+		String apiUrl = getApiUrl(query);
+		if(query.compareTo("self")==0){
+			apiUrl = getApiUrlForServiceDoc();
+		}
+		
+		Request get = Request.Get(apiUrl);
 		get.addHeader("Authorization", "Bearer " + bearer);
 
 		try {
