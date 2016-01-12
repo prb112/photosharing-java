@@ -25,13 +25,17 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.entity.ByteArrayEntity;
 
 import photosharing.api.Configuration;
+import photosharing.api.ExecutorUtil;
 import photosharing.api.base.APIDefinition;
 import photosharing.api.oauth.OAuth20Data;
+import photosharing.api.oauth.OAuth20Handler;
 
 /**
  * The class calls the API for a File Recommendation in IBM Connections <a
@@ -49,6 +53,8 @@ public class RecommendationDefinition implements APIDefinition {
 	/**
 	 * generate the base api url for files
 	 * 
+	 * you can use basic or oauth in the path of the api url 
+	 * 
 	 * @param userid
 	 * @return apiUrl 
 	 */
@@ -57,7 +63,7 @@ public class RecommendationDefinition implements APIDefinition {
 		String apiUrl = config.getValue(Configuration.BASEURL);	
 		StringBuilder builder = new StringBuilder();
 		builder.append(apiUrl);
-		builder.append("/files/oauth/api");
+		builder.append("/files/basic/api");
 		return builder.toString();
 	}
 
@@ -79,6 +85,8 @@ public class RecommendationDefinition implements APIDefinition {
 	 * gets the nonce url <a href="http://ibm.co/1fG83gY">Get a Cryptographic
 	 * Key</a>
 	 * 
+	 * you can use basic or oauth in the path of the api url 
+	 * 
 	 * @return apiUrl
 	 */
 	private String getNonceUrl() {
@@ -86,7 +94,7 @@ public class RecommendationDefinition implements APIDefinition {
 		String apiUrl = config.getValue(Configuration.BASEURL);	
 		StringBuilder builder = new StringBuilder();
 		builder.append(apiUrl);
-		builder.append("/files/oauth/api/nonce");
+		builder.append("/files/basic/api/nonce");
 		return builder.toString();
 	}
 
@@ -104,32 +112,34 @@ public class RecommendationDefinition implements APIDefinition {
 		get.addHeader("Authorization", "Bearer " + bearer);
 
 		try {
-			Response apiResponse = get.execute();
+			Executor exec = ExecutorUtil.getExecutor();
+			Response apiResponse = exec.execute(get);
+			
 			HttpResponse hr = apiResponse.returnResponse();
 
 			/**
-			 * Check the status codes and if 200, convert to String
+			 * Check the status codes and if SC_OK (200), convert to String
 			 */
 			int code = hr.getStatusLine().getStatusCode();
 
 			// Session is no longer valid or access token is expired
-			if (code == 403) {
+			if (code == HttpStatus.SC_FORBIDDEN) {
 				response.sendRedirect("./api/logout");
 			}
 
 			// User is not authorized
-			else if (code == 401) {
-				response.setStatus(401);
+			else if (code == HttpStatus.SC_UNAUTHORIZED) {
+				response.setStatus(HttpStatus.SC_UNAUTHORIZED);
 			}
 
-			else if (code == 200) {
+			else if (code == HttpStatus.SC_OK) {
 				InputStream in = hr.getEntity().getContent();
 				nonce = IOUtils.toString(in);
 			}
 
 		} catch (IOException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
-			response.setStatus(500);
+			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 			logger.severe("IOException " + e.toString());
 		}
 
@@ -175,24 +185,24 @@ public class RecommendationDefinition implements APIDefinition {
 			int code = hr.getStatusLine().getStatusCode();
 
 			// Session is no longer valid or access token is expired
-			if (code == 403) {
+			if (code == HttpStatus.SC_FORBIDDEN) {
 				response.sendRedirect("./api/logout");
 			}
 
 			// User is not authorized
-			else if (code == 401) {
-				response.setStatus(401);
+			else if (code == HttpStatus.SC_UNAUTHORIZED) {
+				response.setStatus(HttpStatus.SC_UNAUTHORIZED);
 			}
 
-			// Default to 200
+			// Default to SC_OK (200)
 			else {
-				response.setStatus(200);
+				response.setStatus(HttpStatus.SC_OK);
 
 			}
 
 		} catch (IOException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
-			response.setStatus(500);
+			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 			logger.severe("IOException " + e.toString());
 		}
 	}
@@ -269,8 +279,8 @@ public class RecommendationDefinition implements APIDefinition {
 		/**
 		 * get the users bearer token
 		 */
-		HttpSession session = request.getSession();
-		OAuth20Data data = (OAuth20Data) session.getAttribute("credentials");
+		HttpSession session = request.getSession(false);
+		OAuth20Data data = (OAuth20Data) session.getAttribute(OAuth20Handler.CREDENTIALS);
 		String bearer = data.getAccessToken();
 
 		// Parameters to use
@@ -281,7 +291,7 @@ public class RecommendationDefinition implements APIDefinition {
 		// Test is the key parameters are invalid
 		if (likeParam == null || likeParam.isEmpty() || lid == null
 				|| uid == null || uid.isEmpty() || lid.isEmpty()) {
-			response.setStatus(412);
+			response.setStatus(HttpStatus.SC_PRECONDITION_FAILED);
 		}
 		// Branches to removing a recommendation
 		else if (likeParam.compareToIgnoreCase("off") == 0) {
@@ -297,9 +307,9 @@ public class RecommendationDefinition implements APIDefinition {
 				like(bearer, lid, uid, nonce, response);
 			}
 		}
-		// Catch all for Response Code 412
+		// Catch all for Response Code SC_PRECONDITION_FAILED 412
 		else {
-			response.setStatus(412);
+			response.setStatus(HttpStatus.SC_PRECONDITION_FAILED);
 		}
 
 	}

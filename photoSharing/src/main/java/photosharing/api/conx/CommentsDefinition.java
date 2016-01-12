@@ -40,6 +40,7 @@ import photosharing.api.Configuration;
 import photosharing.api.ExecutorUtil;
 import photosharing.api.base.APIDefinition;
 import photosharing.api.oauth.OAuth20Data;
+import photosharing.api.oauth.OAuth20Handler;
 
 /**
  * The class calls the API for a File Comments in IBM Connections <a
@@ -459,7 +460,7 @@ public class CommentsDefinition implements APIDefinition {
 		 * get the users bearer token
 		 */
 		HttpSession session = request.getSession(false);
-		OAuth20Data data = (OAuth20Data) session.getAttribute("credentials");
+		OAuth20Data data = (OAuth20Data) session.getAttribute(OAuth20Handler.CREDENTIALS);
 		String bearer = data.getAccessToken();
 
 		// Create a Comment

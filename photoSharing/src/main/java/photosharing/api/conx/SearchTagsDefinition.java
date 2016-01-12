@@ -86,7 +86,7 @@ public class SearchTagsDefinition implements APIDefinition {
 		/**
 		 * get the users bearer token
 		 */
-		HttpSession session = request.getSession();
+		HttpSession session = request.getSession(false);
 		OAuth20Data data = (OAuth20Data) session.getAttribute(OAuth20Handler.CREDENTIALS);
 		String bearer = data.getAccessToken();
 

@@ -29,8 +29,20 @@ commons-collections4
 # Installation
 
 *Prerequisite*: 
-Ensure you have the latest version of [IBM WebSphere Liberty](https://developer.ibm.com/wasdev/websphere-liberty/) installed in your environment.
-
+Ensure you have the latest version of [IBM WebSphere Liberty](https://developer.ibm.com/wasdev/websphere-liberty/) installed in your environment. The Liberty configuration should include the following features (or Java 7 EE Full Profile):
+`<!-- Enable features -->
+	<featureManager>
+		<feature>jsp-2.2</feature>
+		<feature>localConnector-1.0</feature>
+		<feature>servlet-3.1</feature>
+		<feature>websocket-1.0</feature>
+		<feature>webProfile-6.0</feature>
+	    <feature>jaxrs-1.1</feature>
+    	<feature>ssl-1.0</feature>
+		<feature>appSecurity-2.0</feature>
+	</featureManager>
+`
+	
 1. Clone the github repository.  
 `git clone https://github.com/ibmcnxdev/photosharing-java.git`  
 

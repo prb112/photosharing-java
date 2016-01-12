@@ -40,6 +40,7 @@ import org.xml.sax.SAXException;
 import photosharing.api.Configuration;
 import photosharing.api.base.APIDefinition;
 import photosharing.api.oauth.OAuth20Data;
+import photosharing.api.oauth.OAuth20Handler;
 
 /**
  * The class calls the API for a Uploading a File to IBM Connections<a
@@ -282,8 +283,8 @@ public class UploadFileDefinition implements APIDefinition {
 		/**
 		 * get the users bearer token
 		 */
-		HttpSession session = request.getSession();
-		OAuth20Data data = (OAuth20Data) session.getAttribute("credentials");
+		HttpSession session = request.getSession(false);
+		OAuth20Data data = (OAuth20Data) session.getAttribute(OAuth20Handler.CREDENTIALS);
 		String bearer = data.getAccessToken();
 
 		// Create a Comment
