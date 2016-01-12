@@ -1,5 +1,5 @@
 /**
- * © Copyright IBM Corp. 2015
+ * © Copyright IBM Corp. 2016
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -91,11 +91,11 @@ public class ProfileDefinition implements APIDefinition {
 	public void run(HttpServletRequest request, HttpServletResponse response) {
 
 		/**
-		 * check if query is empty, send 412
+		 * check if query is empty, send SC_PRECONDITION_FAILED - 412
 		 */
 		String query = request.getParameter("uid");
 		if (query == null || query.isEmpty()) {
-			response.setStatus(412);
+			response.setStatus(HttpStatus.SC_PRECONDITION_FAILED);
 		}
 
 		/**
@@ -136,18 +136,20 @@ public class ProfileDefinition implements APIDefinition {
 				 */
 				int code = hr.getStatusLine().getStatusCode();
 
-				// Session is no longer valid or access token is expired
-				if (code == 403) {
+				// Session is no longer valid or access token is expired - 403
+				if (code == HttpStatus.SC_FORBIDDEN) {
 					response.sendRedirect("./api/logout");
 				}
 
 				// User is not authorized
-				else if (code == 401) {
-					response.setStatus(401);
+				// SC_UNAUTHORIZED (401)
+				else if (code == HttpStatus.SC_UNAUTHORIZED) {
+					response.setStatus(HttpStatus.SC_UNAUTHORIZED);
 				}
 
-				// Content is returned
-				else if (code == 200) {
+				// Content is returned 
+				// OK (200)
+				else if (code == HttpStatus.SC_OK) {
 					InputStream in = hr.getEntity().getContent();
 
 					// Converts the XML to JSON
@@ -197,17 +199,19 @@ public class ProfileDefinition implements APIDefinition {
 			int code = hr.getStatusLine().getStatusCode();
 
 			// Session is no longer valid or access token is expired
-			if (code == 403) {
+			// SC_FORBIDDEN (403)
+			if (code == HttpStatus.SC_FORBIDDEN) {
 				response.sendRedirect("./api/logout");
 			}
 
 			// User is not authorized
-			else if (code == 401) {
-				response.setStatus(401);
+			// SC_UNAUTHORIZED (401)
+			else if (code == HttpStatus.SC_UNAUTHORIZED) {
+				response.setStatus(HttpStatus.SC_UNAUTHORIZED);
 			}
 
-			// Content is returned
-			else if (code == 200) {
+			// Content is returned OK (200)
+			else if (code == HttpStatus.SC_OK) {
 				InputStream in = hr.getEntity().getContent();
 
 				// Converts the XML to JSON
@@ -276,20 +280,19 @@ public class ProfileDefinition implements APIDefinition {
 			else {
 				JSONObject obj = new JSONObject();
 				obj.put("error", "unexpected content");
-
 			}
 
 		} catch (IOException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
-			response.setStatus(500);
+			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 			logger.severe("IOException " + e.toString());
 		} catch (JSONException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
-			response.setStatus(500);
+			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 			logger.severe("JSONException " + e.toString());
 		} catch (SAXException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
-			response.setStatus(500);
+			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 			logger.severe("SAXException  " + e.toString());
 		}
 

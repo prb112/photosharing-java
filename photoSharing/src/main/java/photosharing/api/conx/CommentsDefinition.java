@@ -1,5 +1,5 @@
 /**
- * © Copyright IBM Corp. 2015
+ * © Copyright IBM Corp. 2016
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,13 +57,15 @@ public class CommentsDefinition implements APIDefinition {
 	/**
 	 * generate the base api url for files
 	 * 
+	 * you can use the path component {basic} / {oauth}
+	 * 
 	 * @return {String} url representing the api
 	 */
 	private String getApiUrl() {
 		Configuration config = Configuration.getInstance(null);
 		StringBuilder builder = new StringBuilder();
 		builder.append(config.getValue(Configuration.BASEURL));
-		builder.append("/files/oauth/api");
+		builder.append("/files/basic/api");
 		return builder.toString();
 	}
 
