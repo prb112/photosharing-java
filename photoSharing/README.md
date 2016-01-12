@@ -67,6 +67,10 @@ Ensure you have the latest version of [IBM WebSphere Liberty](https://developer.
 
 9. The PhotoSharing application is now running! Direct browser to `http://localhost:9080/photosharing`.  
 
+You can demonstrate the OAuth 2.0 Flow and reference the Java code in photosharing.api.oauth. 
+
+Note, the cookies used to maintain a user's session with photoSharing are not secured and not http-only. You can convert to secure/http-only by using a copy of Angular not delivered from a Content Delivery Network. 
+
 # License
 
 This code is licensed under Apache License v2.0. See the LICENSE file in the root directory of this repository for more details.
