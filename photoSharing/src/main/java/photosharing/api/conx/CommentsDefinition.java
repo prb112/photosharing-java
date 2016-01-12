@@ -458,7 +458,7 @@ public class CommentsDefinition implements APIDefinition {
 		/**
 		 * get the users bearer token
 		 */
-		HttpSession session = request.getSession();
+		HttpSession session = request.getSession(false);
 		OAuth20Data data = (OAuth20Data) session.getAttribute("credentials");
 		String bearer = data.getAccessToken();
 
