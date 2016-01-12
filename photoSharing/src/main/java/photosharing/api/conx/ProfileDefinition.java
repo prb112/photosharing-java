@@ -118,8 +118,7 @@ public class ProfileDefinition implements APIDefinition {
 			 * http://localhost:9080/photoSharing/api/profile?uid=self maps to
 			 * https://apps.collabservnext.com/profiles/atom/profileService.do
 			 * 
-			 * example response
-			 * 
+			 * and results in an id for the self user, this data is ideally cached on the client. 
 			 */
 			if (query.compareTo("self") == 0) {
 				String apiUrl = getApiUrlForServiceDoc();
