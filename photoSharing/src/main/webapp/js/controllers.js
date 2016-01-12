@@ -270,7 +270,8 @@ photoApp.controller('LoginController', function($location, $scope, $rootScope,
 photoApp.controller('OAuthController', function($scope,$window,$http,$timeout,$cookies,$location,$log) {
 	$scope.polling = function(){
 		
-		$log.warn("Cookie: " + $cookies.get('JSESSIONID'));
+		//Only logs if debug is configured
+		$log.debug("Cookie: " + $cookies.get('JSESSIONID'));
 		
 		var config = {
 				method: "GET",

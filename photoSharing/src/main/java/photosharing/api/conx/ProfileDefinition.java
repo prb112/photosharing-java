@@ -26,6 +26,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.wink.json4j.JSONArray;
@@ -34,8 +36,10 @@ import org.apache.wink.json4j.JSONObject;
 import org.xml.sax.SAXException;
 
 import photosharing.api.Configuration;
+import photosharing.api.ExecutorUtil;
 import photosharing.api.base.APIDefinition;
 import photosharing.api.oauth.OAuth20Data;
+import photosharing.api.oauth.OAuth20Handler;
 
 /**
  * The class calls the API for a Profile in IBM Connections <a
@@ -51,8 +55,8 @@ public class ProfileDefinition implements APIDefinition {
 	private Logger logger = Logger.getLogger(className);
 
 	/**
-	 * generate the api url with a given userid
-	 * the format is atom and supports json (change atom to json)
+	 * generate the api url with a given userid the format is atom and supports
+	 * json (change atom to json)
 	 * 
 	 * @param userid
 	 * @return url of the api
@@ -63,14 +67,14 @@ public class ProfileDefinition implements APIDefinition {
 				+ "/profiles/atom/profile.do?userid=" + userid;
 		return apiUrl;
 	}
-	
+
 	/**
-	 * generates the api url to retrieve the logged in user id
-	 * the format is atom/xml
+	 * generates the api url to retrieve the logged in user id the format is
+	 * atom/xml
 	 * 
 	 * @return url of the service api
 	 */
-	private String getApiUrlForServiceDoc(){
+	private String getApiUrlForServiceDoc() {
 		Configuration config = Configuration.getInstance(null);
 		String apiUrl = config.getValue(Configuration.BASEURL)
 				+ "/profiles/atom/profileService.do";
@@ -85,8 +89,7 @@ public class ProfileDefinition implements APIDefinition {
 	 */
 	@Override
 	public void run(HttpServletRequest request, HttpServletResponse response) {
-		
-		
+
 		/**
 		 * check if query is empty, send 412
 		 */
@@ -98,23 +101,95 @@ public class ProfileDefinition implements APIDefinition {
 		/**
 		 * get the users bearer token
 		 */
-		HttpSession session = request.getSession();
-		OAuth20Data data = (OAuth20Data) session.getAttribute("credentials");
+		HttpSession session = request.getSession(false);
+
+		Object oData = session.getAttribute(OAuth20Handler.CREDENTIALS);
+		if (oData == null) {
+			logger.warning("OAuth20Data is null");
+		}
+
+		OAuth20Data data = (OAuth20Data) oData;
 		String bearer = data.getAccessToken();
 
-		/**
-		 * The query should be cleansed before passing it to the backend
-		 */
-		String apiUrl = getApiUrl(query);
-		if(query.compareTo("self")==0){
-			apiUrl = getApiUrlForServiceDoc();
-		}
-		
-		Request get = Request.Get(apiUrl);
-		get.addHeader("Authorization", "Bearer " + bearer);
-
 		try {
-			Response apiResponse = get.execute();
+
+			/**
+			 * Example URL:
+			 * http://localhost:9080/photoSharing/api/profile?uid=self maps to
+			 * https://apps.collabservnext.com/profiles/atom/profileService.do
+			 * 
+			 * example response
+			 * 
+			 */
+			if (query.compareTo("self") == 0) {
+				String apiUrl = getApiUrlForServiceDoc();
+
+				Request get = Request.Get(apiUrl);
+				get.addHeader("Authorization", "Bearer " + bearer);
+
+				Executor exec = ExecutorUtil.getExecutor();
+				Response apiResponse = exec.execute(get);
+
+				HttpResponse hr = apiResponse.returnResponse();
+
+				/**
+				 * Check the status codes
+				 */
+				int code = hr.getStatusLine().getStatusCode();
+
+				// Session is no longer valid or access token is expired
+				if (code == 403) {
+					response.sendRedirect("./api/logout");
+				}
+
+				// User is not authorized
+				else if (code == 401) {
+					response.setStatus(401);
+				}
+
+				// Content is returned
+				else if (code == 200) {
+					InputStream in = hr.getEntity().getContent();
+
+					// Converts the XML to JSON
+					// Alternatively, one can parse the XML using XPATH
+					String jsonString = org.apache.wink.json4j.utils.XML.toJson(in);
+					logger.info("json string is " + jsonString);
+					
+					JSONObject jsonObj = new JSONObject(jsonString);
+					JSONObject workspace = jsonObj.getJSONObject("service").getJSONObject("workspace").getJSONObject("collection");
+					String id = workspace.getString("userid");
+					
+					query = id;
+				} else {
+					JSONObject obj = new JSONObject();
+					obj.put("error", "unexpected content");
+				}
+
+			}
+
+			/**
+			 * The query should be cleansed before passing it to the backend
+			 * cleansing can incorporate checking that the id is a number
+			 * 
+			 * example URL
+			 * http://localhost:9080/photoSharing/api/profile?uid=20131674 maps
+			 * to https
+			 * ://apps.collabservnext.com/profiles/atom/profile.do?userid
+			 * =20131674
+			 * 
+			 * example response {"img":
+			 * "https:\/\/apps.collabservnext.com\/profiles\/photo.do?key=fef1b5f3-586f-4470-ab0a-a9d4251fe1ec&lastMod=1443607729019","name":"P
+			 * a u l Demo","email":"demo@us.ibm.com"}
+			 * 
+			 */
+			String apiUrl = getApiUrl(query);
+			Request get = Request.Get(apiUrl);
+			get.addHeader("Authorization", "Bearer " + bearer);
+
+			Executor exec = ExecutorUtil.getExecutor();
+			Response apiResponse = exec.execute(get);
+
 			HttpResponse hr = apiResponse.returnResponse();
 
 			/**
@@ -139,10 +214,13 @@ public class ProfileDefinition implements APIDefinition {
 				// Converts the XML to JSON
 				// Alternatively, one can parse the XML using XPATH
 				String jsonString = org.apache.wink.json4j.utils.XML.toJson(in);
+				logger.info("json string is " + jsonString);
+
 				JSONObject jsonObj = new JSONObject(jsonString);
 
-				JSONObject entry = jsonObj.getJSONArray("feed")
-						.getJSONObject(0);
+				JSONObject entry = jsonObj.getJSONObject("feed").getJSONObject(
+						"entry");
+				logger.info("entry" + entry);
 
 				// Check if the Entry exists for the given id
 				if (entry != null) {
@@ -187,8 +265,10 @@ public class ProfileDefinition implements APIDefinition {
 
 				} else {
 					// There is no Entry for the user with the id.
+					response.setStatus(HttpStatus.SC_NOT_FOUND);
 					PrintWriter out = response.getWriter();
 					out.println("User does not exist");
+
 				}
 
 			}
