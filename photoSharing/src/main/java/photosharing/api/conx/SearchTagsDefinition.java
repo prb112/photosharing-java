@@ -26,14 +26,18 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.wink.json4j.JSONException;
 import org.apache.wink.json4j.JSONObject;
 
 import photosharing.api.Configuration;
+import photosharing.api.ExecutorUtil;
 import photosharing.api.base.APIDefinition;
 import photosharing.api.oauth.OAuth20Data;
+import photosharing.api.oauth.OAuth20Handler;
 
 /**
  * The class calls the API for searching tags in the Files Service <a
@@ -63,7 +67,7 @@ public class SearchTagsDefinition implements APIDefinition {
 	}
 
 	/**
-	 * searches for tags based on given files
+	 * searches for tags based in the IBM Connections Cloud - Files service, and limit results to documents only
 	 * 
 	 * @see photosharing.api.base.APIDefinition#run(javax.servlet.http.HttpServletRequest,
 	 *      javax.servlet.http.HttpServletResponse)
@@ -72,28 +76,38 @@ public class SearchTagsDefinition implements APIDefinition {
 	public void run(HttpServletRequest request, HttpServletResponse response) {
 
 		/**
-		 * check if query is empty, send 412
+		 * check if query is empty, send SC_PRECONDITION_FAILED 412
 		 */
 		String query = request.getParameter("q");
 		if (query == null || query.isEmpty()) {
-			response.setStatus(412);
+			response.setStatus(HttpStatus.SC_PRECONDITION_FAILED);
 		}
 
 		/**
 		 * get the users bearer token
 		 */
 		HttpSession session = request.getSession();
-		OAuth20Data data = (OAuth20Data) session.getAttribute("credentials");
+		OAuth20Data data = (OAuth20Data) session.getAttribute(OAuth20Handler.CREDENTIALS);
 		String bearer = data.getAccessToken();
 
 		/**
 		 * The query should be cleansed before passing it to the backend
+		 * 
+		 * Example 
+		 * http://localhost:9080/photoSharing/api/searchTags?q=s
+		 * maps to 
+		 * https://apps.collabservnext.com/files/oauth/api/tags/feed?format=json&scope=document&pageSize=16&filter=a
+		 * 
+		 * Response Data
+		 * {"pageSize":2,"startIndex":1,"hasMore":true,"items":[{"name":"a","weight":482}]}
 		 */
 		Request get = Request.Get(getApiUrl(query));
 		get.addHeader("Authorization", "Bearer " + bearer);
 
 		try {
-			Response apiResponse = get.execute();
+			Executor exec = ExecutorUtil.getExecutor();
+			Response apiResponse = exec.execute(get);
+			
 			HttpResponse hr = apiResponse.returnResponse();
 
 			/**
@@ -102,17 +116,17 @@ public class SearchTagsDefinition implements APIDefinition {
 			int code = hr.getStatusLine().getStatusCode();
 
 			// Session is no longer valid or access token is expired
-			if (code == 403) {
+			if (code == HttpStatus.SC_FORBIDDEN) {
 				response.sendRedirect("./api/logout");
 			}
 
 			// User is not authorized
-			else if (code == 401) {
-				response.setStatus(401);
+			else if (code == HttpStatus.SC_UNAUTHORIZED) {
+				response.setStatus(HttpStatus.SC_UNAUTHORIZED);
 			}
 
 			// Content is returned
-			else if (code == 200) {
+			else if (code == HttpStatus.SC_OK) {
 				ServletOutputStream out = response.getOutputStream();
 				InputStream in = hr.getEntity().getContent();
 				IOUtils.copy(in, out);
@@ -129,12 +143,12 @@ public class SearchTagsDefinition implements APIDefinition {
 
 		} catch (IOException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
-			response.setStatus(500);
+			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 			logger.severe("IOException " + e.toString());
 
 		} catch (JSONException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
-			response.setStatus(500);
+			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 			logger.severe("JSONException " + e.toString());
 
 		}
