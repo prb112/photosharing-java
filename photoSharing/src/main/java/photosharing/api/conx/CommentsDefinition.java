@@ -17,9 +17,9 @@ package photosharing.api.conx;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.util.logging.Logger;
 
-import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -73,7 +73,8 @@ public class CommentsDefinition implements APIDefinition {
 	/**
 	 * creates the formatted comment
 	 * 
-	 * @param content the string representing the comment
+	 * @param content
+	 *            the string representing the comment
 	 * @return {String} xml representing a comment
 	 */
 	private String generateComment(String content) {
@@ -85,8 +86,10 @@ public class CommentsDefinition implements APIDefinition {
 	}
 
 	/**
-	 * gets the nonce url so one can <a href="http://ibm.co/1fG83gY">Get a Cryptographic
-	 * Key</a>
+	 * gets the nonce url so one can <a href="http://ibm.co/1fG83gY">Get a
+	 * Cryptographic Key</a>
+	 * 
+	 * you can use the path component {basic} / {oauth}
 	 * 
 	 * @return {String} URL to get Nonce
 	 */
@@ -94,7 +97,7 @@ public class CommentsDefinition implements APIDefinition {
 		Configuration config = Configuration.getInstance(null);
 		StringBuilder builder = new StringBuilder();
 		builder.append(config.getValue(Configuration.BASEURL));
-		builder.append("/files/oauth/api/nonce");
+		builder.append("/files/basic/api/nonce");
 		return builder.toString();
 	}
 
@@ -102,7 +105,8 @@ public class CommentsDefinition implements APIDefinition {
 	 * get nonce as described with nonce <a href="http://ibm.co/1fG83gY">Get a
 	 * Cryptographic Key</a>
 	 * 
-	 * @param bearer the access token
+	 * @param bearer
+	 *            the access token
 	 * @return {String} the nonce
 	 */
 	private String getNonce(String bearer, HttpServletResponse response) {
@@ -126,15 +130,16 @@ public class CommentsDefinition implements APIDefinition {
 			if (code == HttpStatus.SC_FORBIDDEN) {
 				// Session is no longer valid or access token is expired
 				response.setStatus(HttpStatus.SC_FORBIDDEN);
-			}			
-			else if (code == HttpStatus.SC_UNAUTHORIZED) {
+			} else if (code == HttpStatus.SC_UNAUTHORIZED) {
 				// User is not authorized
 				response.setStatus(HttpStatus.SC_UNAUTHORIZED);
-			}
-			else if (code == HttpStatus.SC_OK) {
+			} else if (code == HttpStatus.SC_OK) {
 				// Default to 200
 				InputStream in = hr.getEntity().getContent();
 				nonce = IOUtils.toString(in);
+			} else {
+				// SC_BAD_GATEWAY (503)
+				response.setStatus(HttpStatus.SC_BAD_GATEWAY);
 			}
 
 		} catch (IOException e) {
@@ -150,12 +155,15 @@ public class CommentsDefinition implements APIDefinition {
 	 * deletes a comment with the given comments api url uses the HTTP method
 	 * delete
 	 * 
-	 * @param bearer
-	 * @param cid
-	 * @param pid
-	 * @param uid
+	 * Method: DELETE
+	 * URL: http://localhost:9080/photoSharing/api/comments?uid=20514318&pid=bf33a9b5-3042-46f0-a96e-b8742fced7a4&cid=4ec9c9c2-6e21-4815-bd42-91d502d2d427
+	 * 
+	 * @param bearer token
+	 * @param cid comment id 
+	 * @param pid document id
+	 * @param uid user id
 	 * @param response
-	 * @param nonce
+	 * @param nonce 
 	 */
 	public void deleteComment(String bearer, String cid, String pid,
 			String uid, HttpServletResponse response, String nonce) {
@@ -169,6 +177,7 @@ public class CommentsDefinition implements APIDefinition {
 		try {
 			Executor exec = ExecutorUtil.getExecutor();
 			Response apiResponse = exec.execute(delete);
+			
 			HttpResponse hr = apiResponse.returnResponse();
 
 			/**
@@ -180,14 +189,12 @@ public class CommentsDefinition implements APIDefinition {
 			if (code == HttpStatus.SC_FORBIDDEN) {
 				// Session is no longer valid or access token is expired
 				response.setStatus(HttpStatus.SC_FORBIDDEN);
-			}
-			else if (code == HttpStatus.SC_UNAUTHORIZED) {
+			} else if (code == HttpStatus.SC_UNAUTHORIZED) {
 				// User is not authorized
 				response.setStatus(HttpStatus.SC_UNAUTHORIZED);
-			}
-			else {
-				// Default to 200
-				response.setStatus(HttpStatus.SC_OK);
+			} else {
+				// Default to SC_NO_CONTENT(204)
+				response.setStatus(HttpStatus.SC_NO_CONTENT);
 			}
 
 		} catch (IOException e) {
@@ -201,13 +208,20 @@ public class CommentsDefinition implements APIDefinition {
 	/**
 	 * updates a given comment
 	 * 
-	 * @param bearer the accessToken
-	 * @param cid the comment id 
-	 * @param pid the file id
-	 * @param uid the library id
-	 * @param body the text body
-	 * @param nonce the nonce value
-	 * @param response the response that is going to get the response
+	 * @param bearer
+	 *            the accessToken
+	 * @param cid
+	 *            the comment id
+	 * @param pid
+	 *            the file id
+	 * @param uid
+	 *            the library id
+	 * @param body
+	 *            the text body
+	 * @param nonce
+	 *            the nonce value
+	 * @param response
+	 *            the response that is going to get the response
 	 */
 	public void updateComment(String bearer, String cid, String pid,
 			String uid, String body, String nonce, HttpServletResponse response) {
@@ -221,31 +235,29 @@ public class CommentsDefinition implements APIDefinition {
 		put.addHeader("Authorization", "Bearer " + bearer);
 		put.addHeader("X-Update-Nonce", nonce);
 		put.addHeader("Content-Type", "application/atom+xml");
-		put.addHeader("Content-Length", "" + comment.length());
-
+		
 		try {
 			ByteArrayEntity entity = new ByteArrayEntity(
 					comment.getBytes("UTF-8"));
 			put.body(entity);
 
-			Response apiResponse = put.execute();
+			Executor exec = ExecutorUtil.getExecutor();
+			Response apiResponse = exec.execute(put);
 			HttpResponse hr = apiResponse.returnResponse();
 
 			/**
 			 * Check the status codes
 			 */
 			int code = hr.getStatusLine().getStatusCode();
-			
-			// Checks the status code for the response 
+
+			// Checks the status code for the response
 			if (code == HttpStatus.SC_FORBIDDEN) {
 				// Session is no longer valid or access token is expired
 				response.setStatus(HttpStatus.SC_FORBIDDEN);
-			}
-			else if (code == HttpStatus.SC_UNAUTHORIZED) {
+			} else if (code == HttpStatus.SC_UNAUTHORIZED) {
 				// User is not authorized
 				response.setStatus(HttpStatus.SC_UNAUTHORIZED);
-			}
-			else {
+			} else {
 				// Default to 200
 				response.setStatus(HttpStatus.SC_OK);
 			}
@@ -261,12 +273,18 @@ public class CommentsDefinition implements APIDefinition {
 	/**
 	 * creates a new comment with a given library id and document id
 	 * 
-	 * @param bearer the accesstoken used to make the request
-	 * @param pid the document id
-	 * @param uid the library id
-	 * @param body the body of the comment
-	 * @param nonce the nonce code
-	 * @param response the http response that the results are sent to
+	 * @param bearer
+	 *            the accesstoken used to make the request
+	 * @param pid
+	 *            the document id
+	 * @param uid
+	 *            the library id
+	 * @param body
+	 *            the body of the comment
+	 * @param nonce
+	 *            the nonce code
+	 * @param response
+	 *            the http response that the results are sent to
 	 */
 	public void createComment(String bearer, String pid, String uid,
 			String body, String nonce, HttpServletResponse response) {
@@ -283,13 +301,13 @@ public class CommentsDefinition implements APIDefinition {
 			post.addHeader("Authorization", "Bearer " + bearer);
 			post.addHeader("X-Update-Nonce", nonce);
 			post.addHeader("Content-Type", "application/atom+xml");
-			post.addHeader("Content-Length", "" + comment.length());
-
+			
 			ByteArrayEntity entity = new ByteArrayEntity(
 					comment.getBytes("UTF-8"));
 			post.body(entity);
 
-			Response apiResponse = post.execute();
+			Executor exec = ExecutorUtil.getExecutor();
+			Response apiResponse = exec.execute(post);
 			HttpResponse hr = apiResponse.returnResponse();
 
 			/**
@@ -297,31 +315,30 @@ public class CommentsDefinition implements APIDefinition {
 			 */
 			int code = hr.getStatusLine().getStatusCode();
 
-			//Process the Status Codes
+			// Process the Status Codes
 			if (code == HttpStatus.SC_FORBIDDEN) {
 				// Session is no longer valid or access token is expired
 				response.setStatus(HttpStatus.SC_FORBIDDEN);
-			}
-			else if (code == HttpStatus.SC_UNAUTHORIZED) {
+			} else if (code == HttpStatus.SC_UNAUTHORIZED) {
 				// User is not authorized
 				response.setStatus(HttpStatus.SC_UNAUTHORIZED);
-			}
-			else if (code == HttpStatus.SC_CREATED) {
+			} else if (code == HttpStatus.SC_CREATED) {
 				// Default to 201
 				response.setStatus(HttpStatus.SC_OK);
 
 				InputStream in = hr.getEntity().getContent();
+				
 				String jsonString = org.apache.wink.json4j.utils.XML.toJson(in);
-
+				
 				JSONObject base = new JSONObject(jsonString);
 				JSONObject entry = base.getJSONObject("entry");
 				JSONObject author = entry.getJSONObject("author");
 
 				String name = author.getString("name");
-				String userid = author.getString("snx:userid");
-				String date = entry.getString("date");
+				String userid = author.getString("userid");
+				String date = entry.getString("modified");
 				String content = entry.getString("content");
-				String cid = entry.getString("td:uuid");
+				String cid = entry.getString("uuid");
 
 				// Build the JSON object
 				JSONObject commentJSON = new JSONObject();
@@ -333,28 +350,35 @@ public class CommentsDefinition implements APIDefinition {
 
 				// Flush the Object to the Stream with content type
 				response.setHeader("Content-Type", "application/json");
-				ServletOutputStream out = response.getOutputStream();
-				commentJSON.write(out);
+
+				PrintWriter out = response.getWriter();
+				out.write(commentJSON.toString());
+				out.flush();
+				out.close();
 
 			}
 
 		} catch (IOException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
 			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
-			logger.severe("Issue with create comment" + e.toString());
+			logger.severe("Issue with create comment " + e.toString());
 		} catch (JSONException e) {
-			response.setHeader("X-Application-Error", e.getClass().getName());
+			response.setHeader("X-Application-Error ", e.getClass().getName());
 			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
-			logger.severe("Issue with create comment" + e.toString());
+			logger.severe("Issue with create comment " + e.toString());
+			e.printStackTrace();
 		} catch (SAXException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
 			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
-			logger.severe("Issue with create comment" + e.toString());
+			logger.severe("Issue with create comment " + e.toString());
 		}
 	}
 
 	/**
 	 * reads the comments from the comments feed
+	 * 
+	 * Example URL 
+	 * http://localhost:9080/photoSharing/api/comments?uid=20514318&pid=bf33a9b5-3042-46f0-a96e-b8742fced7a4 
 	 * 
 	 * @param bearer
 	 * @param pid
@@ -366,12 +390,16 @@ public class CommentsDefinition implements APIDefinition {
 		String apiUrl = getApiUrl() + "/userlibrary/" + uid + "/document/"
 				+ pid + "/feed?category=comment&sortBy=created&sortOrder=desc";
 
+		logger.info("Executing Request to: " + apiUrl + " " + bearer);
+		
 		Request get = Request.Get(apiUrl);
 		get.addHeader("Authorization", "Bearer " + bearer);
 
 		try {
 
-			Response apiResponse = get.execute();
+			Executor exec = ExecutorUtil.getExecutor();
+			Response apiResponse = exec.execute(get);
+			
 			HttpResponse hr = apiResponse.returnResponse();
 
 			/**
@@ -380,22 +408,26 @@ public class CommentsDefinition implements APIDefinition {
 			int code = hr.getStatusLine().getStatusCode();
 
 			// Session is no longer valid or access token is expired
-			if (code == 403) {
+			if (code == HttpStatus.SC_FORBIDDEN ) {
 				response.sendRedirect("./api/logout");
 			}
 
 			// User is not authorized
-			else if (code == 401) {
-				response.setStatus(401);
+			else if (code == HttpStatus.SC_UNAUTHORIZED) {
+				response.setStatus(HttpStatus.SC_UNAUTHORIZED);
 			}
 
-			// Default to 200
-			else if (code == 200) {
-				response.setStatus(200);
+			// Default to SC_OK (200)
+			else if (code == HttpStatus.SC_OK) {
+				response.setStatus(HttpStatus.SC_OK);
 
 				InputStream in = hr.getEntity().getContent();
 				String jsonString = org.apache.wink.json4j.utils.XML.toJson(in);
-				JSONObject feed = new JSONObject(jsonString);
+				
+				// Logging out the JSON Object
+				logger.info(jsonString);
+				
+				JSONObject feed = new JSONObject(jsonString).getJSONObject("feed");
 
 				JSONArray comments = new JSONArray();
 
@@ -406,10 +438,11 @@ public class CommentsDefinition implements APIDefinition {
 					JSONObject author = entry.getJSONObject("author");
 
 					String name = author.getString("name");
-					String userid = author.getString("snx:userid");
-					String date = entry.getString("date");
-					String content = entry.getString("content");
-					String cid = entry.getString("td:uuid");
+					String userid = author.getString("userid");
+					
+					String date = entry.getString("modified");
+					String content = entry.getJSONObject("content").getString("content");
+					String cid = entry.getString("uuid");
 
 					// Build the JSON object
 					JSONObject commentJSON = new JSONObject();
@@ -425,23 +458,26 @@ public class CommentsDefinition implements APIDefinition {
 
 				// Flush the Object to the Stream with content type
 				response.setHeader("Content-Type", "application/json");
-				ServletOutputStream out = response.getOutputStream();
-				comments.write(out);
+				PrintWriter out = response.getWriter();
+				out.println(comments.toString());
+				out.flush();
+				
 
 			}
 
 		} catch (IOException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
 			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
-			logger.severe("Issue with read comments" + e.toString());
+			logger.severe("Issue with read comments " + e.toString());
 		} catch (JSONException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
 			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
-			logger.severe("Issue with read comments" + e.toString());
+			logger.severe("Issue with read comments " + e.toString());
+			e.printStackTrace();
 		} catch (SAXException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
 			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
-			logger.severe("Issue with read comments" + e.toString());
+			logger.severe("Issue with read comments " + e.toString());
 		}
 	}
 
@@ -460,97 +496,106 @@ public class CommentsDefinition implements APIDefinition {
 		 * get the users bearer token
 		 */
 		HttpSession session = request.getSession(false);
-		OAuth20Data data = (OAuth20Data) session.getAttribute(OAuth20Handler.CREDENTIALS);
-		String bearer = data.getAccessToken();
+		Object o = session.getAttribute(OAuth20Handler.CREDENTIALS);
+		if (o == null) {
+			logger.warning("Credential Object is not present");
+		} 
+		else {
+			OAuth20Data data = (OAuth20Data) o;
+			String bearer = data.getAccessToken();
 
-		// Create a Comment
-		if (method.compareTo("POST") == 0) {
-			// Extract the URL parameters from the request
-			String pid = request.getParameter("pid");
-			String uid = request.getParameter("uid");
+			// Create a Comment
+			if (method.compareTo("POST") == 0) {
+				// Extract the URL parameters from the request
+				String pid = request.getParameter("pid");
+				String uid = request.getParameter("uid");
 
-			try {
-				String body = IOUtils.toString(request.getInputStream());
+				try {
+					String body = IOUtils.toString(request.getInputStream());
+
+					// Checks the State of the URL parameters
+					if (pid == null || uid == null || body == null
+							|| body.isEmpty() || pid.isEmpty() || uid.isEmpty()) {
+						response.setStatus(HttpStatus.SC_PRECONDITION_FAILED);
+					} else {
+						String nonce = getNonce(bearer, response);
+						if (!nonce.isEmpty()) {
+							createComment(bearer, pid, uid, body, nonce,
+									response);
+						}
+					}
+
+				} catch (IOException e) {
+					response.setHeader("X-Application-Error", e.getClass()
+							.getName());
+					response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+					logger.severe("Issue with POST comment" + e.toString());
+				}
+			}
+			// Update a Comment
+			else if (method.compareTo("PUT") == 0) {
+				// Extract the URL parameters from the request
+				String cid = request.getParameter("cid");
+				String pid = request.getParameter("pid");
+				String uid = request.getParameter("uid");
+
+				try {
+					String body = IOUtils.toString(request.getInputStream());
+
+					// Checks the State of the URL parameters
+					if (cid == null || pid == null || uid == null
+							|| body == null || body.isEmpty() || cid.isEmpty()
+							|| pid.isEmpty() || uid.isEmpty()) {
+						response.setStatus(HttpStatus.SC_PRECONDITION_FAILED);
+					} else {
+						String nonce = getNonce(bearer, response);
+						if (!nonce.isEmpty()) {
+							updateComment(bearer, cid, pid, uid, body, nonce,
+									response);
+						}
+					}
+
+				} catch (IOException e) {
+					response.setHeader("X-Application-Error", e.getClass()
+							.getName());
+					response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+					logger.severe("Issue with PUT comment" + e.toString());
+				}
+
+			}
+			// Delete a Comment
+			else if (method.compareTo("DELETE") == 0) {
+				// Extract the URL parameters from the request
+				String cid = request.getParameter("cid");
+				String pid = request.getParameter("pid");
+				String uid = request.getParameter("uid");
 
 				// Checks the State of the URL parameters
-				if (pid == null || uid == null || body == null
-						|| body.isEmpty() || pid.isEmpty() || uid.isEmpty()) {
+				if (cid == null || pid == null || uid == null || cid.isEmpty()
+						|| pid.isEmpty() || uid.isEmpty()) {
 					response.setStatus(HttpStatus.SC_PRECONDITION_FAILED);
 				} else {
 					String nonce = getNonce(bearer, response);
+
 					if (!nonce.isEmpty()) {
-						createComment(bearer, pid, uid, body, nonce, response);
+						deleteComment(bearer, cid, pid, uid, response, nonce);
 					}
 				}
 
-			} catch (IOException e) {
-				response.setHeader("X-Application-Error", e.getClass()
-						.getName());
-				response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
-				logger.severe("Issue with POST comment" + e.toString());
 			}
-		}
-		// Update a Comment
-		else if (method.compareTo("PUT") == 0) {
-			// Extract the URL parameters from the request
-			String cid = request.getParameter("cid");
-			String pid = request.getParameter("pid");
-			String uid = request.getParameter("uid");
+			// Read a Comment and default to a GET
+			else {
+				// Extract the URL parameters from the request
+				String pid = request.getParameter("pid");
+				String uid = request.getParameter("uid");
 
-			try {
-				String body = IOUtils.toString(request.getInputStream());
-
-				// Checks the State of the URL parameters
-				if (cid == null || pid == null || uid == null || body == null
-						|| body.isEmpty() || cid.isEmpty() || pid.isEmpty()
+				if (pid == null || uid == null || pid.isEmpty()
 						|| uid.isEmpty()) {
 					response.setStatus(HttpStatus.SC_PRECONDITION_FAILED);
 				} else {
-					String nonce = getNonce(bearer, response);
-					if (!nonce.isEmpty()) {
-						updateComment(bearer, cid, pid, uid, body, nonce,
-								response);
-					}
+					readComments(bearer, pid, uid, response);
 				}
 
-			} catch (IOException e) {
-				response.setHeader("X-Application-Error", e.getClass()
-						.getName());
-				response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
-				logger.severe("Issue with PUT comment" + e.toString());
-			}
-
-		}
-		// Delete a Comment
-		else if (method.compareTo("DELETE") == 0) {
-			// Extract the URL parameters from the request
-			String cid = request.getParameter("cid");
-			String pid = request.getParameter("pid");
-			String uid = request.getParameter("uid");
-
-			// Checks the State of the URL parameters
-			if (cid == null || pid == null || uid == null || cid.isEmpty()
-					|| pid.isEmpty() || uid.isEmpty()) {
-				response.setStatus(HttpStatus.SC_PRECONDITION_FAILED);
-			} else {
-				String nonce = getNonce(bearer, response);
-
-				if (!nonce.isEmpty()) {
-					deleteComment(bearer, cid, pid, uid, response, nonce);
-				}
-			}
-
-		}
-		// Read a Comment and default to a GET
-		else {
-			// Extract the URL parameters from the request
-			String pid = request.getParameter("pid");
-			String uid = request.getParameter("uid");
-
-			if (pid == null || uid == null || pid.isEmpty() || uid.isEmpty()) {
-				response.setStatus(HttpStatus.SC_PRECONDITION_FAILED);
-			} else {
-				readComments(bearer, pid, uid, response);
 			}
 
 		}
