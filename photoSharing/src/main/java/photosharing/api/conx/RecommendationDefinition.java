@@ -147,7 +147,12 @@ public class RecommendationDefinition implements APIDefinition {
 	}
 
 	/**
-	 * like a file
+	 * unlike a file
+	 * 
+	 * Example URL 
+	 * http://localhost:9080/photoSharing/api/like?r=off&lid=f8ad2a54-4d20-4b3b-ba3f-834e0b0cf90b&uid=bec24e93-8165-431d-bf38-0c668a5e6727
+	 * maps to 
+	 * 
 	 * 
 	 * @param bearer
 	 * @param lid
@@ -176,7 +181,8 @@ public class RecommendationDefinition implements APIDefinition {
 					recommendation.getBytes("UTF-8"));
 			post.body(entity);
 
-			Response apiResponse = post.execute();
+			Executor exec = ExecutorUtil.getExecutor();
+			Response apiResponse = exec.execute(post);
 			HttpResponse hr = apiResponse.returnResponse();
 
 			/**
@@ -194,9 +200,9 @@ public class RecommendationDefinition implements APIDefinition {
 				response.setStatus(HttpStatus.SC_UNAUTHORIZED);
 			}
 
-			// Default to SC_OK (200)
+			// Default to SC_NO_CONTENT (204)
 			else {
-				response.setStatus(HttpStatus.SC_OK);
+				response.setStatus(HttpStatus.SC_NO_CONTENT);
 
 			}
 
@@ -210,6 +216,11 @@ public class RecommendationDefinition implements APIDefinition {
 	/**
 	 * like a file
 	 * 
+	 * Example URL 
+	 * http://localhost:9080/photoSharing/api/like?r=on&lid=f8ad2a54-4d20-4b3b-ba3f-834e0b0cf90b&uid=bec24e93-8165-431d-bf38-0c668a5e6727
+	 * maps to 
+	 * 
+	 * 
 	 * @param bearer
 	 * @param pid
 	 * @param lid
@@ -222,21 +233,22 @@ public class RecommendationDefinition implements APIDefinition {
 				+ "/feed";
 
 		try {
-
+			
 			String recommendation = generateRecommendationContent();
-
-			// Generate the
+			logger.warning("like -> " + apiUrl + " " + recommendation);
+			
+			// Generate the apiUrl for like
 			Request post = Request.Post(apiUrl);
 			post.addHeader("Authorization", "Bearer " + bearer);
 			post.addHeader("X-Update-Nonce", nonce);
 			post.addHeader("Content-Type", "application/atom+xml");
-			post.addHeader("Content-Length", "" + recommendation.length());
 
 			ByteArrayEntity entity = new ByteArrayEntity(
 					recommendation.getBytes("UTF-8"));
 			post.body(entity);
 
-			Response apiResponse = post.execute();
+			Executor exec = ExecutorUtil.getExecutor();
+			Response apiResponse = exec.execute(post);
 			HttpResponse hr = apiResponse.returnResponse();
 
 			/**
@@ -245,25 +257,26 @@ public class RecommendationDefinition implements APIDefinition {
 			int code = hr.getStatusLine().getStatusCode();
 
 			// Session is no longer valid or access token is expired
-			if (code == 403) {
+			if (code == HttpStatus.SC_FORBIDDEN) {
 				response.sendRedirect("./api/logout");
 			}
 
 			// User is not authorized
-			else if (code == 401) {
-				response.setStatus(401);
+			else if (code == HttpStatus.SC_UNAUTHORIZED) {
+				response.setStatus(HttpStatus.SC_UNAUTHORIZED);
 			}
 
-			// Default to 200
+			// Default to SC_NO_CONTENT (204)
 			else {
-				response.setStatus(200);
+				response.setStatus(HttpStatus.SC_NO_CONTENT);
 
 			}
 
 		} catch (IOException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
-			response.setStatus(500);
+			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 			logger.severe("IOException " + e.toString());
+			e.printStackTrace();
 		}
 	}
 
@@ -275,7 +288,8 @@ public class RecommendationDefinition implements APIDefinition {
 	 */
 	@Override
 	public void run(HttpServletRequest request, HttpServletResponse response) {
-
+		
+		
 		/**
 		 * get the users bearer token
 		 */
@@ -297,17 +311,17 @@ public class RecommendationDefinition implements APIDefinition {
 		else if (likeParam.compareToIgnoreCase("off") == 0) {
 			String nonce = getNonce(bearer, response);
 			if (!nonce.isEmpty()) {
-				unlike(bearer, lid, uid, nonce, response);
+				unlike(bearer, uid, lid, nonce, response);
 			}
 		}
 		// Branches to creating a recommendation
 		else if (likeParam.compareToIgnoreCase("on") == 0) {
 			String nonce = getNonce(bearer, response);
 			if (!nonce.isEmpty()) {
-				like(bearer, lid, uid, nonce, response);
+				like(bearer, uid, lid, nonce, response);
 			}
 		}
-		// Catch all for Response Code SC_PRECONDITION_FAILED 412
+		// Catch all for Response Code SC_PRECONDITION_FAILED (412)
 		else {
 			response.setStatus(HttpStatus.SC_PRECONDITION_FAILED);
 		}

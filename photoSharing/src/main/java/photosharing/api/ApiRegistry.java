@@ -50,6 +50,7 @@ public class ApiRegistry {
 	 * API Definitions
 	 */
 	static{
+				
 		definitions.put("*", (APIDefinition)new MockDefinition());
 		definitions.put("/auth", (APIDefinition) new OAuthDefinition());
 		definitions.put("/poll", (APIDefinition) new PollingDefinition());
