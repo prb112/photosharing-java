@@ -47,20 +47,21 @@ import photosharing.api.oauth.OAuth20Handler;
 public class RecommendationDefinition implements APIDefinition {
 
 	// Logger
-	private final static String className = RecommendationDefinition.class.getName();
+	private final static String className = RecommendationDefinition.class
+			.getName();
 	private Logger logger = Logger.getLogger(className);
 
 	/**
 	 * generate the base api url for files
 	 * 
-	 * you can use basic or oauth in the path of the api url 
+	 * you can use basic or oauth in the path of the api url
 	 * 
 	 * @param userid
-	 * @return apiUrl 
+	 * @return apiUrl
 	 */
 	private String getApiUrl() {
 		Configuration config = Configuration.getInstance(null);
-		String apiUrl = config.getValue(Configuration.BASEURL);	
+		String apiUrl = config.getValue(Configuration.BASEURL);
 		StringBuilder builder = new StringBuilder();
 		builder.append(apiUrl);
 		builder.append("/files/basic/api");
@@ -85,13 +86,13 @@ public class RecommendationDefinition implements APIDefinition {
 	 * gets the nonce url <a href="http://ibm.co/1fG83gY">Get a Cryptographic
 	 * Key</a>
 	 * 
-	 * you can use basic or oauth in the path of the api url 
+	 * you can use basic or oauth in the path of the api url
 	 * 
 	 * @return apiUrl
 	 */
 	private String getNonceUrl() {
 		Configuration config = Configuration.getInstance(null);
-		String apiUrl = config.getValue(Configuration.BASEURL);	
+		String apiUrl = config.getValue(Configuration.BASEURL);
 		StringBuilder builder = new StringBuilder();
 		builder.append(apiUrl);
 		builder.append("/files/basic/api/nonce");
@@ -114,7 +115,7 @@ public class RecommendationDefinition implements APIDefinition {
 		try {
 			Executor exec = ExecutorUtil.getExecutor();
 			Response apiResponse = exec.execute(get);
-			
+
 			HttpResponse hr = apiResponse.returnResponse();
 
 			/**
@@ -135,6 +136,9 @@ public class RecommendationDefinition implements APIDefinition {
 			else if (code == HttpStatus.SC_OK) {
 				InputStream in = hr.getEntity().getContent();
 				nonce = IOUtils.toString(in);
+			}else{
+				//Given a bad proxied request
+				response.setStatus(HttpStatus.SC_BAD_GATEWAY);
 			}
 
 		} catch (IOException e) {
@@ -149,10 +153,12 @@ public class RecommendationDefinition implements APIDefinition {
 	/**
 	 * unlike a file
 	 * 
-	 * Example URL 
-	 * http://localhost:9080/photoSharing/api/like?r=off&lid=f8ad2a54-4d20-4b3b-ba3f-834e0b0cf90b&uid=bec24e93-8165-431d-bf38-0c668a5e6727
-	 * maps to 
-	 * 
+	 * Example URL
+	 * http://localhost:9080/photoSharing/api/like?r=off&lid=f8ad2a54
+	 * -4d20-4b3b-ba3f-834e0b0cf90b&uid=bec24e93-8165-431d-bf38-0c668a5e6727
+	 * maps to
+	 * https://apps.collabservdaily.swg.usma.ibm.com/files/basic/api/library/00c129c9-f3b6-4d22-9988-99e69d16d7a7/document/bf33a9b5-3042-46f0-a96e-b8742fced7a4/feed
+	 
 	 * 
 	 * @param bearer
 	 * @param lid
@@ -168,15 +174,15 @@ public class RecommendationDefinition implements APIDefinition {
 		try {
 
 			String recommendation = generateRecommendationContent();
-
+			logger.info("like -> " + apiUrl + " " + recommendation);
+			
 			// Generate the
 			Request post = Request.Post(apiUrl);
 			post.addHeader("Authorization", "Bearer " + bearer);
 			post.addHeader("X-Update-Nonce", nonce);
 			post.addHeader("X-METHOD-OVERRIDE", "DELETE");
 			post.addHeader("Content-Type", "application/atom+xml");
-			post.addHeader("Content-Length", "" + recommendation.length());
-
+			
 			ByteArrayEntity entity = new ByteArrayEntity(
 					recommendation.getBytes("UTF-8"));
 			post.body(entity);
@@ -216,9 +222,11 @@ public class RecommendationDefinition implements APIDefinition {
 	/**
 	 * like a file
 	 * 
-	 * Example URL 
-	 * http://localhost:9080/photoSharing/api/like?r=on&lid=f8ad2a54-4d20-4b3b-ba3f-834e0b0cf90b&uid=bec24e93-8165-431d-bf38-0c668a5e6727
-	 * maps to 
+	 * Example URL
+	 * http://localhost:9080/photoSharing/api/like?r=on&lid=f8ad2a54-
+	 * 4d20-4b3b-ba3f-834e0b0cf90b&uid=bec24e93-8165-431d-bf38-0c668a5e6727 maps
+	 * to
+	 * https://apps.collabservdaily.swg.usma.ibm.com/files/basic/api/library/00c129c9-f3b6-4d22-9988-99e69d16d7a7/document/bf33a9b5-3042-46f0-a96e-b8742fced7a4/feed
 	 * 
 	 * 
 	 * @param bearer
@@ -233,10 +241,10 @@ public class RecommendationDefinition implements APIDefinition {
 				+ "/feed";
 
 		try {
-			
+
 			String recommendation = generateRecommendationContent();
-			logger.warning("like -> " + apiUrl + " " + recommendation);
-			
+			logger.info("like -> " + apiUrl + " " + recommendation);
+
 			// Generate the apiUrl for like
 			Request post = Request.Post(apiUrl);
 			post.addHeader("Authorization", "Bearer " + bearer);
@@ -255,6 +263,7 @@ public class RecommendationDefinition implements APIDefinition {
 			 * Check the status codes
 			 */
 			int code = hr.getStatusLine().getStatusCode();
+			logger.info("code " + code);
 
 			// Session is no longer valid or access token is expired
 			if (code == HttpStatus.SC_FORBIDDEN) {
@@ -288,44 +297,49 @@ public class RecommendationDefinition implements APIDefinition {
 	 */
 	@Override
 	public void run(HttpServletRequest request, HttpServletResponse response) {
-		
-		
+
 		/**
-		 * get the users bearer token
+		 * get the users bearer token from the session object
 		 */
 		HttpSession session = request.getSession(false);
-		OAuth20Data data = (OAuth20Data) session.getAttribute(OAuth20Handler.CREDENTIALS);
-		String bearer = data.getAccessToken();
+		Object o = session.getAttribute(OAuth20Handler.CREDENTIALS);
+		if (o == null) {
+			logger.warning("Credentials can't be found");
+			response.setStatus(HttpStatus.SC_BAD_REQUEST);
+		} else {
 
-		// Parameters to use
-		String likeParam = request.getParameter("r"); // r = recommendation
-		String lid = request.getParameter("lid");
-		String uid = request.getParameter("uid");
+			OAuth20Data data = (OAuth20Data) o;
+			String bearer = data.getAccessToken();
 
-		// Test is the key parameters are invalid
-		if (likeParam == null || likeParam.isEmpty() || lid == null
-				|| uid == null || uid.isEmpty() || lid.isEmpty()) {
-			response.setStatus(HttpStatus.SC_PRECONDITION_FAILED);
-		}
-		// Branches to removing a recommendation
-		else if (likeParam.compareToIgnoreCase("off") == 0) {
-			String nonce = getNonce(bearer, response);
-			if (!nonce.isEmpty()) {
-				unlike(bearer, uid, lid, nonce, response);
+			// Parameters to use
+			String likeParam = request.getParameter("r"); // r = recommendation
+			String lid = request.getParameter("lid");
+			String uid = request.getParameter("uid");
+
+			// Test is the key parameters are invalid
+			if (likeParam == null || likeParam.isEmpty() || lid == null
+					|| uid == null || uid.isEmpty() || lid.isEmpty()) {
+				response.setStatus(HttpStatus.SC_PRECONDITION_FAILED);
 			}
-		}
-		// Branches to creating a recommendation
-		else if (likeParam.compareToIgnoreCase("on") == 0) {
-			String nonce = getNonce(bearer, response);
-			if (!nonce.isEmpty()) {
-				like(bearer, uid, lid, nonce, response);
+			// Branches to removing a recommendation
+			else if (likeParam.compareToIgnoreCase("off") == 0) {
+				String nonce = getNonce(bearer, response);
+				if (!nonce.isEmpty()) {
+					unlike(bearer, uid, lid, nonce, response);
+				}
 			}
-		}
-		// Catch all for Response Code SC_PRECONDITION_FAILED (412)
-		else {
-			response.setStatus(HttpStatus.SC_PRECONDITION_FAILED);
-		}
+			// Branches to creating a recommendation
+			else if (likeParam.compareToIgnoreCase("on") == 0) {
+				String nonce = getNonce(bearer, response);
+				if (!nonce.isEmpty()) {
+					like(bearer, uid, lid, nonce, response);
+				}
+			}
+			// Catch all for Response Code SC_PRECONDITION_FAILED (412)
+			else {
+				response.setStatus(HttpStatus.SC_PRECONDITION_FAILED);
+			}
 
+		}
 	}
-
 }
