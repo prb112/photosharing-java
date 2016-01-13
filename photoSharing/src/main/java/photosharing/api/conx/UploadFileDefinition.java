@@ -18,19 +18,17 @@ package photosharing.api.conx;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map.Entry;
 import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.apache.commons.collections4.map.MultiValueMap;
+import org.apache.commons.codec.binary.Base64InputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.entity.InputStreamEntity;
@@ -39,6 +37,7 @@ import org.apache.wink.json4j.JSONObject;
 import org.xml.sax.SAXException;
 
 import photosharing.api.Configuration;
+import photosharing.api.ExecutorUtil;
 import photosharing.api.base.APIDefinition;
 import photosharing.api.oauth.OAuth20Data;
 import photosharing.api.oauth.OAuth20Handler;
@@ -102,7 +101,8 @@ public class UploadFileDefinition implements APIDefinition {
 		get.addHeader("Authorization", "Bearer " + bearer);
 
 		try {
-			Response apiResponse = get.execute();
+			Executor exec = ExecutorUtil.getExecutor();
+			Response apiResponse = exec.execute(get);
 			HttpResponse hr = apiResponse.returnResponse();
 
 			/**
@@ -158,61 +158,57 @@ public class UploadFileDefinition implements APIDefinition {
 
 		} else {
 
-			// MultiValueMap is used to parameters
-			MultiValueMap<String, String> urlParams = new MultiValueMap<String, String>();
-			urlParams.put("visibility", visibility);
-			urlParams.put("title", title);
+			/*
+			 * Builds the URL Parameters 
+			 */
+			StringBuilder builder = new StringBuilder();
+			builder.append("visibility=" + visibility+ "&");
+			builder.append("title=" + title+ "&");
 
 			// The Share parameters for the URL
 			if (share != null && !share.isEmpty()) {
-				urlParams.put("shared", "true");
-				urlParams.put("sharedWith", share);
+				builder.append("shared=true&");
+				builder.append("shareWith=" + share + "&");
 			}
 
 			// Splits the TagString into Indvidual Tags
+			// - Technically this API is limited to 3 tags at most. 
 			String[] tags = tagsUnsplit.split(",");
 			for (String tag : tags) {
-				urlParams.put("tag", tag);
+				logger.info("Tag-> " + tag);
+				builder.append("tag=" + tag + "&");
 			}
-
-			// Updates to the parameters
-			StringBuilder builder = new StringBuilder();
-			Iterator<Entry<String, String>> iter = urlParams.iterator();
-			while (iter.hasNext()) {
-				Entry<String, String> entry = iter.next();
-				String param = entry.getKey();
-
-				@SuppressWarnings("unchecked")
-				Collection<String> col = (Collection<String>) urlParams
-						.get(param);
-				for (String val : col) {
-					builder.append("&" + param + "=");
-					builder.append(val);
-				}
-
-			}
-
+			
 			// Build the apiURL
 			String apiUrl = getApiUrl() + "/myuserlibrary/feed?"
 					+ builder.toString();
+			
+			//API Url
+			logger.info(apiUrl);
 
 			// Add the Headers
-			String length = request.getHeader("X-Content-Length");
-			String slug = title.split(".")[0];
+			//String length = request.getHeader("X-Content-Length");
+			String contentType = request.getHeader("Content-Type");
+			String fileext = contentType.split("/")[1];
+			String slug = title+ "." + fileext;
+			
 
 			Request post = Request.Post(apiUrl);
 			post.addHeader("Authorization", "Bearer " + bearer);
 			post.addHeader("X-Update-Nonce", nonce);
 			post.addHeader("Slug", slug);
-			post.addHeader("Content-Length", length);
+			//post.addHeader("Content-Length", length);
 
 			try {
 				//
 				InputStream in = request.getInputStream();
-				InputStreamEntity entity = new InputStreamEntity(in);
+				Base64InputStream bis = new Base64InputStream(in);
+				
+				InputStreamEntity entity = new InputStreamEntity(bis);
 				post.body(entity);
 
-				Response apiResponse = post.execute();
+				Executor exec = ExecutorUtil.getExecutor();
+				Response apiResponse = exec.execute(post);
 				HttpResponse hr = apiResponse.returnResponse();
 
 				/**
