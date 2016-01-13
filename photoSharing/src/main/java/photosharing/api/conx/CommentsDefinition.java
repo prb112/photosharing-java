@@ -155,15 +155,21 @@ public class CommentsDefinition implements APIDefinition {
 	 * deletes a comment with the given comments api url uses the HTTP method
 	 * delete
 	 * 
-	 * Method: DELETE
-	 * URL: http://localhost:9080/photoSharing/api/comments?uid=20514318&pid=bf33a9b5-3042-46f0-a96e-b8742fced7a4&cid=4ec9c9c2-6e21-4815-bd42-91d502d2d427
+	 * Method: DELETE URL:
+	 * http://localhost:9080/photoSharing/api/comments?uid=20514318
+	 * &pid=bf33a9b5-
+	 * 3042-46f0-a96e-b8742fced7a4&cid=4ec9c9c2-6e21-4815-bd42-91d502d2d427
 	 * 
-	 * @param bearer token
-	 * @param cid comment id 
-	 * @param pid document id
-	 * @param uid user id
+	 * @param bearer
+	 *            token
+	 * @param cid
+	 *            comment id
+	 * @param pid
+	 *            document id
+	 * @param uid
+	 *            user id
 	 * @param response
-	 * @param nonce 
+	 * @param nonce
 	 */
 	public void deleteComment(String bearer, String cid, String pid,
 			String uid, HttpServletResponse response, String nonce) {
@@ -177,7 +183,7 @@ public class CommentsDefinition implements APIDefinition {
 		try {
 			Executor exec = ExecutorUtil.getExecutor();
 			Response apiResponse = exec.execute(delete);
-			
+
 			HttpResponse hr = apiResponse.returnResponse();
 
 			/**
@@ -227,16 +233,17 @@ public class CommentsDefinition implements APIDefinition {
 			String uid, String body, String nonce, HttpServletResponse response) {
 		String apiUrl = getApiUrl() + "/userlibrary/" + uid + "/document/"
 				+ pid + "/comment/" + cid + "/entry";
-
-		String comment = generateComment(body);
-
-		// Generate the
-		Request put = Request.Put(apiUrl);
-		put.addHeader("Authorization", "Bearer " + bearer);
-		put.addHeader("X-Update-Nonce", nonce);
-		put.addHeader("Content-Type", "application/atom+xml");
-		
 		try {
+			JSONObject obj = new JSONObject(body);
+
+			String comment = generateComment(obj.getString("comment"));
+
+			// Generate the
+			Request put = Request.Put(apiUrl);
+			put.addHeader("Authorization", "Bearer " + bearer);
+			put.addHeader("X-Update-Nonce", nonce);
+			put.addHeader("Content-Type", "application/atom+xml");
+
 			ByteArrayEntity entity = new ByteArrayEntity(
 					comment.getBytes("UTF-8"));
 			put.body(entity);
@@ -266,7 +273,12 @@ public class CommentsDefinition implements APIDefinition {
 			response.setHeader("X-Application-Error", e.getClass().getName());
 			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 			logger.severe("Issue with update comment" + e.toString());
-		}
+		}catch (JSONException e) {
+			response.setHeader("X-Application-Error", e.getClass().getName());
+			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+			logger.severe("Issue with update comments " + e.toString());
+			e.printStackTrace();
+		} 
 
 	}
 
@@ -301,7 +313,7 @@ public class CommentsDefinition implements APIDefinition {
 			post.addHeader("Authorization", "Bearer " + bearer);
 			post.addHeader("X-Update-Nonce", nonce);
 			post.addHeader("Content-Type", "application/atom+xml");
-			
+
 			ByteArrayEntity entity = new ByteArrayEntity(
 					comment.getBytes("UTF-8"));
 			post.body(entity);
@@ -327,9 +339,9 @@ public class CommentsDefinition implements APIDefinition {
 				response.setStatus(HttpStatus.SC_OK);
 
 				InputStream in = hr.getEntity().getContent();
-				
+
 				String jsonString = org.apache.wink.json4j.utils.XML.toJson(in);
-				
+
 				JSONObject base = new JSONObject(jsonString);
 				JSONObject entry = base.getJSONObject("entry");
 				JSONObject author = entry.getJSONObject("author");
@@ -377,8 +389,9 @@ public class CommentsDefinition implements APIDefinition {
 	/**
 	 * reads the comments from the comments feed
 	 * 
-	 * Example URL 
-	 * http://localhost:9080/photoSharing/api/comments?uid=20514318&pid=bf33a9b5-3042-46f0-a96e-b8742fced7a4 
+	 * Example URL
+	 * http://localhost:9080/photoSharing/api/comments?uid=20514318&pid
+	 * =bf33a9b5-3042-46f0-a96e-b8742fced7a4
 	 * 
 	 * @param bearer
 	 * @param pid
@@ -391,7 +404,7 @@ public class CommentsDefinition implements APIDefinition {
 				+ pid + "/feed?category=comment&sortBy=created&sortOrder=desc";
 
 		logger.info("Executing Request to: " + apiUrl + " " + bearer);
-		
+
 		Request get = Request.Get(apiUrl);
 		get.addHeader("Authorization", "Bearer " + bearer);
 
@@ -399,7 +412,7 @@ public class CommentsDefinition implements APIDefinition {
 
 			Executor exec = ExecutorUtil.getExecutor();
 			Response apiResponse = exec.execute(get);
-			
+
 			HttpResponse hr = apiResponse.returnResponse();
 
 			/**
@@ -408,7 +421,7 @@ public class CommentsDefinition implements APIDefinition {
 			int code = hr.getStatusLine().getStatusCode();
 
 			// Session is no longer valid or access token is expired
-			if (code == HttpStatus.SC_FORBIDDEN ) {
+			if (code == HttpStatus.SC_FORBIDDEN) {
 				response.sendRedirect("./api/logout");
 			}
 
@@ -423,11 +436,12 @@ public class CommentsDefinition implements APIDefinition {
 
 				InputStream in = hr.getEntity().getContent();
 				String jsonString = org.apache.wink.json4j.utils.XML.toJson(in);
-				
+
 				// Logging out the JSON Object
 				logger.info(jsonString);
-				
-				JSONObject feed = new JSONObject(jsonString).getJSONObject("feed");
+
+				JSONObject feed = new JSONObject(jsonString)
+						.getJSONObject("feed");
 
 				JSONArray comments = new JSONArray();
 
@@ -439,9 +453,10 @@ public class CommentsDefinition implements APIDefinition {
 
 					String name = author.getString("name");
 					String userid = author.getString("userid");
-					
+
 					String date = entry.getString("modified");
-					String content = entry.getJSONObject("content").getString("content");
+					String content = entry.getJSONObject("content").getString(
+							"content");
 					String cid = entry.getString("uuid");
 
 					// Build the JSON object
@@ -461,7 +476,6 @@ public class CommentsDefinition implements APIDefinition {
 				PrintWriter out = response.getWriter();
 				out.println(comments.toString());
 				out.flush();
-				
 
 			}
 
@@ -499,8 +513,7 @@ public class CommentsDefinition implements APIDefinition {
 		Object o = session.getAttribute(OAuth20Handler.CREDENTIALS);
 		if (o == null) {
 			logger.warning("Credential Object is not present");
-		} 
-		else {
+		} else {
 			OAuth20Data data = (OAuth20Data) o;
 			String bearer = data.getAccessToken();
 

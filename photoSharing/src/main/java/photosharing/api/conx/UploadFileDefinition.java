@@ -30,6 +30,7 @@ import javax.servlet.http.HttpSession;
 import org.apache.commons.collections4.map.MultiValueMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.entity.InputStreamEntity;
@@ -58,6 +59,8 @@ public class UploadFileDefinition implements APIDefinition {
 	/**
 	 * generate the base api url for files
 	 * 
+	 * you can use basic or oauth in the path of the api url
+	 * 
 	 * @param userid
 	 * @return url to the api
 	 */
@@ -65,7 +68,7 @@ public class UploadFileDefinition implements APIDefinition {
 		Configuration config = Configuration.getInstance(null);
 		StringBuilder builder = new StringBuilder();
 		builder.append(config.getValue(Configuration.BASEURL));
-		builder.append("/files/oauth/api");
+		builder.append("/files/basic/api");
 		return builder.toString();
 	}
 
@@ -73,13 +76,15 @@ public class UploadFileDefinition implements APIDefinition {
 	 * gets the nonce url <a href="http://ibm.co/1fG83gY">Get a Cryptographic
 	 * Key</a>
 	 * 
+	 * you can use basic or oauth in the path of the api url
+	 * 
 	 * @return the api url for the nonce
 	 */
 	private String getNonceUrl() {
 		Configuration config = Configuration.getInstance(null);
 		StringBuilder builder = new StringBuilder();
 		builder.append(config.getValue(Configuration.BASEURL));
-		builder.append("/files/oauth/api/nonce");
+		builder.append("/files/basic/api/nonce");
 		return builder.toString();
 	}
 
@@ -106,23 +111,23 @@ public class UploadFileDefinition implements APIDefinition {
 			int code = hr.getStatusLine().getStatusCode();
 
 			// Session is no longer valid or access token is expired
-			if (code == 403) {
+			if (code == HttpStatus.SC_FORBIDDEN) {
 				response.sendRedirect("./api/logout");
 			}
 
 			// User is not authorized
-			else if (code == 401) {
-				response.setStatus(401);
+			else if (code == HttpStatus.SC_UNAUTHORIZED) {
+				response.setStatus(HttpStatus.SC_UNAUTHORIZED);
 			}
 
-			else if (code == 200) {
+			else if (code == HttpStatus.SC_OK) {
 				InputStream in = hr.getEntity().getContent();
 				nonce = IOUtils.toString(in);
 			}
 
 		} catch (IOException e) {
 			response.setHeader("X-Application-Error", e.getClass().getName());
-			response.setStatus(500);
+			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 			logger.severe("IOException " + e.toString());
 		}
 
@@ -132,8 +137,8 @@ public class UploadFileDefinition implements APIDefinition {
 	/**
 	 * uploads a file to the IBM Connections Cloud using the Files Service
 	 * 
-	 * @param bearer
-	 * @param nonce
+	 * @param bearer token
+	 * @param nonce 
 	 * @param request
 	 * @param response
 	 */
@@ -149,7 +154,7 @@ public class UploadFileDefinition implements APIDefinition {
 		// Check for the Required Parameters
 		if (visibility == null || title == null || title.isEmpty()
 				|| visibility.isEmpty()) {
-			response.setStatus(412);
+			response.setStatus(HttpStatus.SC_PRECONDITION_FAILED);
 
 		} else {
 
@@ -216,23 +221,23 @@ public class UploadFileDefinition implements APIDefinition {
 				int code = hr.getStatusLine().getStatusCode();
 
 				// Session is no longer valid or access token is expired
-				if (code == 403) {
+				if (code == HttpStatus.SC_FORBIDDEN) {
 					response.sendRedirect("./api/logout");
 				}
 
 				// User is not authorized
-				else if (code == 401) {
-					response.setStatus(401);
+				else if (code == HttpStatus.SC_UNAUTHORIZED) {
+					response.setStatus(HttpStatus.SC_UNAUTHORIZED);
 				}
 
 				// Duplicate Item
-				else if (code == 409) {
-					response.setStatus(409);
+				else if (code == HttpStatus.SC_CONFLICT) {
+					response.setStatus(HttpStatus.SC_CONFLICT);
 				}
 
-				// Default to 200
-				else {
-					response.setStatus(200);
+				// Checks if Created
+				else if(code == HttpStatus.SC_CREATED) {
+					response.setStatus(HttpStatus.SC_OK);
 					/**
 					 * Do Extra Processing Here to process the body
 					 */
@@ -248,22 +253,25 @@ public class UploadFileDefinition implements APIDefinition {
 					writer.append(obj.toString());
 					writer.close();
 
+				}else{
+					// Catch All
+					response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 				}
 
 			} catch (IOException e) {
 				response.setHeader("X-Application-Error", e.getClass()
 						.getName());
-				response.setStatus(500);
+				response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 				logger.severe("IOException " + e.toString());
 			} catch (SAXException e) {
 				response.setHeader("X-Application-Error", e.getClass()
 						.getName());
-				response.setStatus(500);
+				response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 				logger.severe("IOException " + e.toString());
 			} catch (JSONException e) {
 				response.setHeader("X-Application-Error", e.getClass()
 						.getName());
-				response.setStatus(500);
+				response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 				logger.severe("IOException " + e.toString());
 			}
 		}
@@ -291,10 +299,10 @@ public class UploadFileDefinition implements APIDefinition {
 		if (method.compareTo("POST") == 0) {
 			String nonce = getNonce(bearer, response);
 			if (!nonce.isEmpty()) {
-				// uploadFile Here
+				uploadFile(bearer, nonce, request, response);
 			}
 		} else {
-			response.setStatus(412);
+			response.setStatus(HttpStatus.SC_PRECONDITION_FAILED);
 		}
 
 	}

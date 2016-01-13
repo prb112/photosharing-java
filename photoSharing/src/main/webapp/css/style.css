@@ -3,6 +3,14 @@
   text-align: center  !important;
 }
 
+.preview-border {
+	border-style: solid;
+    border-width: 1px;
+}
+
+.rightdialog {
+	margin-right: 10px;
+}
 
 .login-location {
 	margin-left: 10px;

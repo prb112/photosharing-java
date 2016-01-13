@@ -62,7 +62,7 @@ public class SearchPeopleDefinition implements APIDefinition {
 	private String getApiUrl(String query) {
 		Configuration config = Configuration.getInstance(null);
 		String apiUrl = config.getValue(Configuration.BASEURL)
-				+ "/search/oauth/people/typeahead?query=" + query;
+				+ "/search/oauth/people/typeahead?query=" + query + "&highlight=false";
 		return apiUrl;
 	}
 
@@ -127,8 +127,11 @@ public class SearchPeopleDefinition implements APIDefinition {
 			/**
 			 * Check the status codes
 			 */
+			
 			int code = hr.getStatusLine().getStatusCode();
-
+			
+			logger.info("Code is " + code + " " + getApiUrl(query));
+			
 			// Session is no longer valid or access token is expired
 			if (code == HttpStatus.SC_FORBIDDEN) {
 				response.sendRedirect("./api/logout");
@@ -141,6 +144,7 @@ public class SearchPeopleDefinition implements APIDefinition {
 
 			// Content is returned
 			else if (code == HttpStatus.SC_OK) {
+				response.setStatus(HttpStatus.SC_OK);
 				ServletOutputStream out = response.getOutputStream();
 				InputStream in = hr.getEntity().getContent();
 				IOUtils.copy(in, out);
@@ -152,6 +156,7 @@ public class SearchPeopleDefinition implements APIDefinition {
 			else {
 				JSONObject obj = new JSONObject();
 				obj.put("error", "unexpected content");
+				response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 
 			}
 

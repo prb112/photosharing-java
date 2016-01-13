@@ -23,6 +23,7 @@ import photosharing.api.base.ImageDefinition;
 import photosharing.api.base.MockDefinition;
 import photosharing.api.bss.LogoutDefinition;
 import photosharing.api.conx.CommentsDefinition;
+import photosharing.api.conx.FileDefinition;
 import photosharing.api.conx.ProfileDefinition;
 import photosharing.api.conx.RecommendationDefinition;
 import photosharing.api.conx.SearchPeopleDefinition;
@@ -63,6 +64,7 @@ public class ApiRegistry {
 		definitions.put("/like", (APIDefinition) new RecommendationDefinition());
 		definitions.put("/upload", (APIDefinition) new UploadFileDefinition());
 		definitions.put("/callback", (APIDefinition) new CallbackDefinition());
+		definitions.put("/file", (APIDefinition) new FileDefinition());
 	}
 	
 	/**
