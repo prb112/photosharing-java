@@ -261,6 +261,7 @@ public class ProfileDefinition implements APIDefinition {
 					profile.put("name", name);
 					profile.put("email", email);
 					profile.put("img", image);
+					profile.put("userid", query);
 
 					// Write output streams
 					ServletOutputStream out = response.getOutputStream();
@@ -280,6 +281,9 @@ public class ProfileDefinition implements APIDefinition {
 			else {
 				JSONObject obj = new JSONObject();
 				obj.put("error", "unexpected content");
+				//Should serialize result
+				
+				response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 			}
 
 		} catch (IOException e) {

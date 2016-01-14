@@ -27,7 +27,7 @@
     	@import url(https://fonts.googleapis.com/css?family=Sue+Ellen+Francisco);
     	@import url(//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.4/css/bootstrap.css);
     	@import url(//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.1/css/justifiedGallery.css);
-    	@import url(./css/style.css);
+    	@import url(./style.css);
     </style>
 
   <!-- Angular -->
@@ -52,16 +52,15 @@
 
   <!-- Justified-Gallery -->
   <script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.1/js/jquery.justifiedGallery.js"></script>
-    
+ 
+  
   <!-- PhotoSharing JavaScript --> 
-  <script src="./js/app.js"></script>
-  <script src="./js/controllers.js"></script>
+  <script src="./controllers.js"></script>
   
   <base href="/photoSharing/" />
   
 </head>
 <body>
-
 <!--Calls back to navbarController, and creates the navbar fixed at the top of the screen-->
 <nav ng-controller="NavbarController" id="navStyle" class="navbar navbar-fixed-top" role="navigation">
     <!--Displays brand in center of navbar-->
@@ -177,9 +176,29 @@
 
     </div>
 </nav>
-
 <div class="view-animate-container location-main">
-    <div ng-view class="view-animate page page-home"/>
+   <div class="login-location rightdialog"  ng-controller="XProfileController">
+
+<!-- Displays user's uploaded photos with infinite-scroll -->
+<div class="container-full">
+  <div class="row">
+    <div class="col-md-12">
+      <div id="profileGalleryx" class="gallery" >
+        <div ng-repeat="img in data">
+          <a href="#/photo/{{img.lid}}/{{img.pid}}">
+            <img ng-src="{{img.thumbnail}}"/>
+          </a>
+          <div class="caption">
+            <a href="#/photo/{{img.lid}}/{{img.pid}}">{{img.title}}</a>
+            <div id="author"><a href="#/profile/{{img.uid}}">{{img.photographer}}</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
 </div>
   
 </body>

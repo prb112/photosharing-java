@@ -60,7 +60,7 @@ public class CallbackDefinition implements APIDefinition {
 		@SuppressWarnings("unused")
 		Configuration config = Configuration.getInstance(request);		
 		
-		HttpSession session = request.getSession(true);
+		HttpSession session = request.getSession(false);
 		if (session != null) {
 			String code = request.getParameter("code");
 			

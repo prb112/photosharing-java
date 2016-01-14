@@ -1,9 +1,9 @@
 <!-- Justified-Gallery -->
 <script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.1/js/jquery.justifiedGallery.js"></script>
     
-<div class="login-location rightdialog" ng-controller="XHomeController" ng-show="loggedin">
+<div class="login-location rightdialog" ng-controller="XPrivateController" ng-show="loggedin">
 
-	<div id="homeGallery" class="gallery hidden"
+	<div id="privateGallery" class="gallery hidden"
 		infinite-scroll="loadMore()" infinite-scroll-distance="1">
 		<div ng-repeat="entry in data">
 			<a ng-href="./#/photo/{{entry.lid}}/{{entry.pid}}"> <img

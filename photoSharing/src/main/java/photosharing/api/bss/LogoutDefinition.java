@@ -25,10 +25,12 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 
 import photosharing.api.Configuration;
+import photosharing.api.ExecutorUtil;
 import photosharing.api.base.APIDefinition;
 
 /**
@@ -61,12 +63,13 @@ public class LogoutDefinition implements APIDefinition {
 			HttpSession session = request.getSession(false);
 			
 			if(session != null){
-				System.out.println(session.getId());
+				logger.info(session.getId() + " is being logged out");
 				
 				Request get = Request.Get(api);
 				
 				try {
-					Response apiResponse = get.execute();
+					Executor exec = ExecutorUtil.getExecutor();
+					Response apiResponse = exec.execute(get);
 					HttpResponse hr = apiResponse.returnResponse();
 
 					/**

@@ -1,1 +1,38 @@
-<div class="login-location" ng-show="loggedin">profile</div>
+<div class="login-location rightdialog" ng-controller="XProfileController">
+
+<!-- Justified-Gallery -->
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.1/js/jquery.justifiedGallery.js"></script>
+    
+    
+<!-- Displays the user's profile information -->
+<div class="container-full">
+  <div class="row profileContainer" align="middle">
+    <div class="col-md-12">
+      <img id="profileImg" class="img-responsive img-circle" ng-src={{profile.avatar}}></img>
+      <div class="profileInfo">
+        <h1 class="user">{{profile.displayName}}</h1>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Displays user's uploaded photos with infinite-scroll -->
+<div class="container-full">
+  <div class="row">
+    <div class="col-md-12">
+     <div id="profileGalleryx" class="gallery" >
+        <div ng-repeat="img in data">
+          <a href="#/photo/{{img.lid}}/{{img.pid}}">
+            <img ng-src="{{img.thumbnail}}"/>
+          </a>
+          <div class="caption">
+            <a href="./#/photo/{{img.lid}}/{{img.pid}}">{{img.title}}</a>
+            <div id="author"><a href="./#/profile/{{img.uid}}">{{img.photographer}}</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>

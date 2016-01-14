@@ -21,6 +21,59 @@
 var photoApp = angular.module('photoApp', [ 'ngSanitize', 'ngRoute',
 		'ngAnimate', 'ngCookies', 'ui.bootstrap', 'infinite-scroll' ]);
 
+/*
+ * Controller that lays out the profile page
+ */
+photoApp.controller('XProfileController',
+		function($scope, $window, $http, $timeout, $cookies, $location, $log,
+				$rootScope, $routeParams, $animate) {
+
+			angular.forEach($rootScope.buttons, function(btn) {
+				$(btn).css("animation", "");
+				$(btn).css("box-shadow", "");
+			});
+
+			$(".profileButton").css("box-shadow", "0px 2px 0px #004266");
+
+			// $("#profileGalleryx").justifiedGallery();
+			var galleryConfig = {
+				rowHeight : window.screen.height * .25,
+				lastRow : 'nojustify',
+				margins : 10,
+				captions : true,
+				waitThumbnailsLoad : false
+			};
+
+			angular.element(document).ready(
+					function() {
+						var $profileGallery = $('#profileGalleryx');
+						$profileGallery.justifiedGallery(galleryConfig).on(
+								'jg.complete', function(e) {
+									$scope.loading = false;
+								});
+						$profileGallery.removeClass('hidden');
+						$profileGallery.addClass('resetOverflow');
+					});
+
+
+			// Updates to Profiles
+			$scope.profile = {
+				displayName : "",
+				avatar : "",
+			};
+
+
+			$scope.data = [{"uid":"20971118","thumbnail":".\/api\/file?action=thumbnail&pid=7fdedc74-a9f4-46f1-acde-39bef9975847&lid=2597409c-b292-4059-bb4f-3c92c90f5c2e","lid":"2597409c-b292-4059-bb4f-3c92c90f5c2e","pid":"7fdedc74-a9f4-46f1-acde-39bef9975847"
+				,"photographer":"ASIC ASIC","title":"Test32ab.jpeg"},{"uid":"20971118","thumbnail":".\/api\/file?action=thumbnail&pid=a9046490-dc17-43c1-8efb-c443c31a183c&lid=2597409c-b292-4059-bb4f-3c92c90f5c2e","lid":"2597409c-b292-4059-bb4f-3c92c90f5c2e"
+				,"pid":"a9046490-dc17-43c1-8efb-c443c31a183c","photographer":"ASIC ASIC","title":"Test.png"},{"uid":"20971118","thumbnail":".\/api\/file?action=thumbnail&pid=987d9dc7-251e-41ee-b986-8e3329a4f47b&lid=2597409c-b292-4059-bb4f-3c92c90f5c2e"
+				,"lid":"2597409c-b292-4059-bb4f-3c92c90f5c2e","pid":"987d9dc7-251e-41ee-b986-8e3329a4f47b","photographer"
+				:"ASIC ASIC","title":"Test3.png"}]; 
+				
+				//[{"uid":"20971118","thumbnail":"http://raw.githubusercontent.com/miromannino/Justified-Gallery/master/test/photos/6791628438_affaa19e10.jpg","pid":"7fdedc74-a9f4-46f1-acde-39bef9975847","photographer":"ASIC ASIC","title":"Test32ab.jpeg"},{"uid":"20971118","thumbnail":"http://raw.githubusercontent.com/miromannino/Justified-Gallery/master/test/photos/6791628438_affaa19e10.jpg","lid":"2597409c-b292-4059-bb4f-3c92c90f5c2e","pid":"a9046490-dc17-43c1-8efb-c443c31a183c","photographer":"ASIC ASIC","title":"Test.png"},{"uid":"20971118","thumbnail":"http://raw.githubusercontent.com/miromannino/Justified-Gallery/master/test/photos/6791628438_affaa19e10.jpg","lid":"2597409c-b292-4059-bb4f-3c92c90f5c2e","pid":"987d9dc7-251e-41ee-b986-8e3329a4f47b","photographer":"ASIC ASIC","title":"Test3.png"}];
+			
+		});
+
+
 /**
  * The controller for the Navigation Bar
  */
@@ -169,6 +222,7 @@ photoApp.controller('NavigationButtonController', function($location, $scope,
 			$log.log("Public Button Clicked");
 		} else if (button === ".profileButton") {
 			$log.log("Profile Button Clicked");
+			$location.url("/profile/200000");
 
 		} else if (button === ".privateButton") {
 			$log.log("Messages Button Clicked");
@@ -466,36 +520,17 @@ photoApp
 photoApp.controller('SearchController', function($location, $scope, $rootScope,
 		$http, $route, $routeParams, $cookies, $uibModal, $log, $window) {
 
-	$scope.searchQuery = '';
-	
 	$scope.peopleSearch = function() {
 		$log.log("People Search");
-		var people = $scope.searchQuery;
-	    if (people == '') {
-	      $scope.resultList = [];
-	    } else {
-	      $http.get('./api/searchPeople?q=' + people).then(function(response) {
-	        $log.log(response);
-	        $scope.resultList = response.data.persons;
-	      });
-	    }
+
 	};
 
 	$scope.search = function() {
 		$log.log("Search");
-		 if ($scope.searchQuery) {
-		      $scope.searchTags = $scope.searchQuery.split(" ");
-		      $rootScope.filterTags = $scope.searchTags.join();
-		      $scope.resultList = [];
-			  $scope.searchQuery = '';
-		 }
 	};
 
 	$scope.goToProfile = function(id) {
 		$log.log("Moving to profile " + id);
-	    $scope.resultList = [];
-	    $scope.searchQuery = '';
-	    $location.url('/profile/' + id);
 	};
 
 	/**
@@ -608,7 +643,7 @@ photoApp.controller('OAuthController', function($scope, $window, $http,
 /*
  * Controller that lays out the profile page
  */
-photoApp.controller('XProfileController',
+photoApp.controller('XProfileController2',
 		function($scope, $window, $http, $timeout, $cookies, $location, $log,
 				$rootScope, $routeParams, $animate) {
 
@@ -620,7 +655,16 @@ photoApp.controller('XProfileController',
 			$(".profileButton").css("box-shadow", "0px 2px 0px #004266");
 
 			// $("#profileGalleryx").justifiedGallery();
-			
+			var galleryConfig = {
+				rowHeight : window.screen.height * .25,
+				lastRow : 'nojustify',
+				margins : 10,
+				captions : true,
+				waitThumbnailsLoad : false
+			};
+
+			var $profileGallery = $('#profileGalleryx');
+			$profileGallery.justifiedGallery(galleryConfig);
 
 			/**
 			 * loads more
@@ -656,275 +700,15 @@ photoApp.controller('XProfileController',
 
 			// http://localhost:9080/photoSharing/api/file?action=userlibrary&userid=20971118
 
-//			$scope.data = [{"uid":"20971118","thumbnail":".\/api\/file?action=thumbnail&pid=7fdedc74-a9f4-46f1-acde-39bef9975847&lid=2597409c-b292-4059-bb4f-3c92c90f5c2e","lid":"2597409c-b292-4059-bb4f-3c92c90f5c2e","pid":"7fdedc74-a9f4-46f1-acde-39bef9975847"
-//				,"photographer":"ASIC ASIC","title":"Test32ab.jpeg"},{"uid":"20971118","thumbnail":".\/api\/file?action=thumbnail&pid=a9046490-dc17-43c1-8efb-c443c31a183c&lid=2597409c-b292-4059-bb4f-3c92c90f5c2e","lid":"2597409c-b292-4059-bb4f-3c92c90f5c2e"
-//				,"pid":"a9046490-dc17-43c1-8efb-c443c31a183c","photographer":"ASIC ASIC","title":"Test.png"},{"uid":"20971118","thumbnail":".\/api\/file?action=thumbnail&pid=987d9dc7-251e-41ee-b986-8e3329a4f47b&lid=2597409c-b292-4059-bb4f-3c92c90f5c2e"
-//				,"lid":"2597409c-b292-4059-bb4f-3c92c90f5c2e","pid":"987d9dc7-251e-41ee-b986-8e3329a4f47b","photographer"
-//				:"ASIC ASIC","title":"Test3.png"}]; 
-
 			var apiurlx = './api/file?action=userlibrary&userid=' + userid;
 			$http.get(apiurlx).then(function(response) {
 				$scope.data = response.data;
-				
-				var galleryConfig = {
-						rowHeight : window.screen.height * .25,
-						lastRow : 'nojustify',
-						margins : 10,
-						captions : true,
-						waitThumbnailsLoad : false
-					};
-
-				angular.element(document).ready(
-					function() {
-						var $profileGallery = $('#profileGalleryx');
-						$profileGallery.justifiedGallery(galleryConfig).on(
-									'jg.complete', function(e) {
-											$scope.loading = false;
-										});
-							$profileGallery.removeClass('hidden');
-							$profileGallery.addClass('resetOverflow');
-					});
 
 			}, function(response) {
 				$log.log("Data " + response.data);
 				$log.log("status " + response.status);
 			});
 		});
-
-/*
- * Controller that lays out the home page
- */
-photoApp.controller('XHomeController',
-		function($scope, $window, $http, $timeout, $cookies, $location, $log,
-				$rootScope, $routeParams, $animate) {
-
-			angular.forEach($rootScope.buttons, function(btn) {
-				$(btn).css("animation", "");
-				$(btn).css("box-shadow", "");
-			});
-
-			$(".profileButton").css("box-shadow", "0px 2px 0px #004266");
-
-			// $("#profileGalleryx").justifiedGallery();
-			
-
-			/**
-			 * loads more
-			 */
-			$scope.loadMore = function() {
-				// TODO Needs to be Reimplemented
-			};
-
-			var apiurlx = './api/file?action=public';
-			$http.get(apiurlx).then(function(response) {
-				$scope.data = response.data;
-				
-				var galleryConfig = {
-						rowHeight : window.screen.height * .25,
-						lastRow : 'nojustify',
-						margins : 10,
-						captions : true,
-						waitThumbnailsLoad : false
-					};
-
-				angular.element(document).ready(
-					function() {
-						var homeGallery = $('#homeGallery');
-						homeGallery.justifiedGallery(galleryConfig).on(
-									'jg.complete', function(e) {
-											$scope.loading = false;
-										});
-						homeGallery.removeClass('hidden');
-						homeGallery.addClass('resetOverflow');
-					});
-
-			}, function(response) {
-				$log.log("Data " + response.data);
-				$log.log("status " + response.status);
-			});
-		});
-
-/*
- * Controller that lays out the home page
- */
-photoApp.controller('XPrivateController',
-		function($scope, $window, $http, $timeout, $cookies, $location, $log,
-				$rootScope, $routeParams, $animate) {
-
-			angular.forEach($rootScope.buttons, function(btn) {
-				$(btn).css("animation", "");
-				$(btn).css("box-shadow", "");
-			});
-
-			$(".profileButton").css("box-shadow", "0px 2px 0px #004266");
-
-			// $("#profileGalleryx").justifiedGallery();
-			
-
-			/**
-			 * loads more
-			 */
-			$scope.loadMore = function() {
-				// TODO Needs to be Reimplemented
-			};
-
-			var apiurlx = './api/file?action=private';
-			$http.get(apiurlx).then(function(response) {
-				$scope.data = response.data;
-				
-				var galleryConfig = {
-						rowHeight : window.screen.height * .25,
-						lastRow : 'nojustify',
-						margins : 10,
-						captions : true,
-						waitThumbnailsLoad : false
-					};
-
-				angular.element(document).ready(
-					function() {
-						var privateGallery = $('#privateGallery');
-						privateGallery.justifiedGallery(galleryConfig).on(
-									'jg.complete', function(e) {
-											$scope.loading = false;
-										});
-						privateGallery.removeClass('hidden');
-						privateGallery.addClass('resetOverflow');
-					});
-
-			}, function(response) {
-				$log.log("Data " + response.data);
-				$log.log("status " + response.status);
-			});
-		});
-
-/*
- * Controller that lays out the message page
- */
-photoApp.controller('XMessageController',
-		function($scope, $window, $http, $timeout, $cookies, $location, $log,
-				$rootScope, $routeParams, $animate) {
-
-			angular.forEach($rootScope.buttons, function(btn) {
-				$(btn).css("animation", "");
-				$(btn).css("box-shadow", "");
-			});
-
-			$(".profileButton").css("box-shadow", "0px 2px 0px #004266");
-
-			// $("#profileGalleryx").justifiedGallery();
-			
-
-			/**
-			 * loads more
-			 */
-			$scope.loadMore = function() {
-				// TODO Needs to be Reimplemented
-			};
-
-			var apiurlx = './api/file?action=messages';
-			$http.get(apiurlx).then(function(response) {
-				$scope.data = response.data;
-				
-				var galleryConfig = {
-						rowHeight : window.screen.height * .25,
-						lastRow : 'nojustify',
-						margins : 10,
-						captions : true,
-						waitThumbnailsLoad : false
-					};
-
-				angular.element(document).ready(
-					function() {
-						var messageGallery = $('#messagesGallery');
-						messageGallery.justifiedGallery(galleryConfig).on(
-									'jg.complete', function(e) {
-											$scope.loading = false;
-										});
-						messageGallery.removeClass('hidden');
-						messageGallery.addClass('resetOverflow');
-					});
-
-			}, function(response) {
-				$log.log("Data " + response.data);
-				$log.log("status " + response.status);
-			});
-		});
-
-/**
- * Controls the Layout of the Photo Page
- */
-photoApp.controller('PhotoController',
-		function($scope, $window, $http, $timeout, $cookies, $location, $log,
-				$rootScope, $routeParams, $animate) {
-	var libraryId = $routeParams.libraryid;
-	var photoId = $routeParams.photoid;
-	
-	$scope.photo = {};
-	$scope.comments = {};
-	$scope.profile = {};
-	
-	//
-	var apiurlx = './api/file?action=info&lid=' + libraryId + "&pid=" + photoId;
-	$http.get(apiurlx).then(function(response) {
-		$scope.data = response.data;
-		/*
-		 * Load the Data into the Given View
-		 */
-		$scope.photo = response.data;
-		
-		// Gets the User's Details
-		var apiurly = './api/profile?uid=' + $scope.photo.uid;
-		$http.get(apiurly).then(function(response) {
-			$scope.displayName = response.data.name;
-
-			/*
-			 * Retrieves the Image Profile
-			 */
-			var image = response.data.img;
-			var imgSrc = "./api/photo?" + image.split("?")[1];
-			$scope.profile.img = imgSrc;
-			$scope.profile.photographer = response.data.name;
-
-		}, function(response) {
-			$log.log("Data " + response.data);
-			$log.log("status " + response.status);
-		});
-		
-	});
-	
-	//
-	var apiurl = './api/comments?uid=' + libraryId + "&pid=" + photoId;
-	$http.get(apiurl).then(function(response) {
-		$scope.data = response.data;
-		/*
-		 * Load the Data into the Given View
-		 */
-		$scope.comments = response.data;
-	});
-	
-	$scope.addComment = function() {
-		// CREATE 
-		//http://localhost:9080/photoSharing/api/comments?uid=20514318&pid=bf33a9b5-3042-46f0-a96e-b8742fced7a4 
-		//{"comment" : "Test 335"}
-
-		var apiurl = './api/comments?uid=' + libraryId + "&pid=" + photoId;
-		var body = { "comment" : $scope.content};
-		$scope.content = '';
-		$http.post(apiurl, body).then(function(response) {
-			$log.log("comments loaded = " + body);
-			
-			var apiurl = './api/comments?uid=' + libraryId + "&pid=" + photoId;
-			$http.get(apiurl).then(function(response) {
-				$scope.data = response.data;
-				/*
-				 * Load the Data into the Given View
-				 */
-				$scope.comments = response.data;
-			});
-		});
-	};
-	
-});
 
 /**
  * Configuration for the photoApp
@@ -949,7 +733,7 @@ photoApp.config([ '$routeProvider', '$locationProvider',
 				templateUrl : "views/modal-upload.html"
 			}).when('/myphotos', {
 				title : "My Photos",
-				templateUrl : "views/myphoto.html"
+				templateUrl : "views/photo.html"
 			}).when('/oauth', {
 				title : "Connect with IBM Connections Cloud",
 				templateUrl : "views/oauth.html"
@@ -957,11 +741,9 @@ photoApp.config([ '$routeProvider', '$locationProvider',
 				title : "Your Profile",
 				templateUrl : "views/profile.html",
 				controller : "XProfileController"
-			}).when('/photo/:libraryid/:photoid', {
-				title : "Photo",
-				templateUrl : "views/photo.html"
 			}).otherwise({ // Defaults to /
 				redirectTo : "/"
 			});
 
 		} ]);
+

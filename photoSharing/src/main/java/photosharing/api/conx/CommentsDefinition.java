@@ -300,9 +300,11 @@ public class CommentsDefinition implements APIDefinition {
 	 */
 	public void createComment(String bearer, String pid, String uid,
 			String body, String nonce, HttpServletResponse response) {
-		String apiUrl = getApiUrl() + "/userlibrary/" + uid + "/document/"
+		String apiUrl = getApiUrl() + "/library/" + uid + "/document/"
 				+ pid + "/feed";
 
+		logger.info(apiUrl);
+		
 		try {
 			JSONObject obj = new JSONObject(body);
 
@@ -400,7 +402,7 @@ public class CommentsDefinition implements APIDefinition {
 	 */
 	public void readComments(String bearer, String pid, String uid,
 			HttpServletResponse response) {
-		String apiUrl = getApiUrl() + "/userlibrary/" + uid + "/document/"
+		String apiUrl = getApiUrl() + "/library/" + uid + "/document/"
 				+ pid + "/feed?category=comment&sortBy=created&sortOrder=desc";
 
 		logger.info("Executing Request to: " + apiUrl + " " + bearer);
@@ -445,7 +447,18 @@ public class CommentsDefinition implements APIDefinition {
 
 				JSONArray comments = new JSONArray();
 
-				JSONArray entries = feed.getJSONArray("entry");
+				JSONArray entries = null;
+				try{
+					
+					entries = feed.getJSONArray("entry");
+					
+				}catch(JSONException e){
+					entries = new JSONArray();
+					if(feed.has("entry")){
+						JSONObject entry = feed.getJSONObject("entry");
+						entries.put(entry);
+					}
+				}
 				int len = entries.length();
 				for (int i = 0; i < len; i++) {
 					JSONObject entry = entries.getJSONObject(i);

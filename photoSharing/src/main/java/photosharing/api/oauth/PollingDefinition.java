@@ -64,7 +64,7 @@ public class PollingDefinition implements APIDefinition {
 				}
 				
 			}else{
-				logger.log(Level.WARNING, "No Credentials");
+				logger.log(Level.WARNING, "No OAuth2.0 Credentials Found during Polling");
 				response.setStatus(HttpStatus.SC_NO_CONTENT);
 			} 
 

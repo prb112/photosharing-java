@@ -1,1 +1,260 @@
-<div class="login-location" ng-show="loggedin">photo</div>
+<div class="login-location" ng-show="loggedin" ng-controller="PhotoController">
+	<div id="photoPage" class="container-fluid">
+
+		<!-- Adds necessary spacing -->
+		<br>
+
+		<div id="allContent" class="row">
+
+			<!--Photo with photoName and deletePhotoButton overlayed -->
+			<div id="photoColumn" class="col-lg-8 col-md-12 col-sm-12 col-xs-12">
+				<div class="photo">
+					<img id="clickedPhoto" class="img-responsive"
+						ng-src="{{photo.thumbnail}}" />
+					<div class="photoToolBar" ng-if="uid == photo.uid"></div>
+					<span class="photoName" ng-if="uid == photo.uid">{{photo.title}}</span>
+					<span class="lineDivider" ng-if="uid == photo.uid"></span> <a
+						href="" class="deletePhotoButton" ng-if="uid == photo.uid"
+						ng-click="deletePhoto()"> <span>Delete</span>
+					</a>
+				</div>
+			</div>
+
+			<div id="commentColumn"
+				class="col-lg-4 col-md-12 col-sm-12 col-xs-12">
+
+				<!--Displays the photo's information-->
+				<div class="photoInfo">
+					<div class="media">
+
+						<!-- Uploader Avatar -->
+						<div class="media-left media-middle">
+							<a href="./#/profile/{{photo.uid}}"> <img
+								class="media-object userPhoto" ng-src="{{profile.img}}">
+							</a>
+						</div>
+
+						<div class="media-body">
+
+							<!-- Adds necessary spacing -->
+							<div class="spacing"></div>
+
+							<!-- Title/Edit Title -->
+							<div class="titleDiv" ng-show="!edit">
+								<span class="photoTitle">{{photo.title}}</span>
+							</div>
+
+							<!-- Edit Title -->
+							<div ng-show="edit">
+								<form>
+									<input id="titleText" class="form-control"
+										ng-model="photoTitleEdit">
+								</form>
+							</div>
+
+							<!-- Uploader Username -->
+							<span class="photographer"><a
+								href=".#/profile/{{photo.uid}}">{{photo.photographer}}</a></span>
+
+							<div class="dateAndVisibility">
+								<!-- Upload Date -->
+								<span class="published">{{photo.published}}</span> 
+								
+								<!-- Displays visibility feature of photo -->
+								<span ng-show="!edit"> <span class="visibility"
+									ng-show="photo.visibility == 'public'">Public</span> <span
+									class="visibility" ng-show="photo.visibility == 'private'">Private</span>
+								</span>
+
+								<!-- Enables a photo's visibilty to be set to public or private -->
+								<span class="form-group" ng-show="edit"> <label>
+										<input type="radio" ng-model="photoVisibilityEdit"
+										value="private"> Private
+								</label> <label> <input type="radio"
+										ng-model="photoVisibilityEdit" value="public"> Public
+								</label>
+								</span>
+
+							</div>
+						</div>
+					</div>
+
+					<!-- Adds necessary spacing-->
+					<br>
+
+					<!-- Displays caption field-->
+					<div class="captionField" ng-show="!edit">
+						<span class="photoCaption">{{photo.summary}}</span>
+					</div>
+
+					<!-- Edit caption -->
+					<div ng-show="edit">
+						<form>
+							<textarea id="captionText" class="form-control"
+								ng-model="photoSummaryEdit"></textarea>
+						</form>
+					</div>
+
+					<!-- Photo tags -->
+					<div class="tagField">
+						<span ng-if="photo.tags.length !== 0">
+							<div class="tagSlot" ng-repeat="tag in photo.tags">
+								<a href="./#/public?tags={{tag}}" id="tagName">{{tag}}</a>
+
+								<!-- Allows user to delete tags -->
+								<a href="" class="deleteTagButton"
+									ng-show="$root.uid == photo.uid" ng-click="deleteTag(tag);">
+									<span class="glyphicon glyphicon-remove"></span>
+								</a>
+
+							</div>
+						</span>
+
+						<!-- Edit tags -->
+						<span class="addTags" ng-if="uid == photo.uid"> <span
+							class="tagSpan"> <input id="tagsText" class="form-control"
+								type="text" placeholder="Add tags"
+								ng-keypress="change($event, 'tags', newMeta)" ng-model="newMeta">
+						</span>
+						</span>
+
+					</div>
+				</div>
+
+				<div id="photoBar">
+
+					<!-- Displays likeButton and number of Likes -->
+					<a href="" class="likeButton" ng-show="liked" ng-click="like()"><span
+						id="blueThumb" class="glyphicon glyphicon-thumbs-up"></span></a> <a
+						href="" class="likeButton" ng-show="!liked" ng-click="like()"><span
+						class="glyphicon glyphicon-thumbs-up"></span></a> <span class="like"
+						ng-if="photo.likes !== 1"> {{photo.likes}} Likes </span> <span
+						class="like" ng-if="photo.likes === 1"> {{photo.likes}}
+						Like </span>
+
+					<!-- Creates dot divider-->
+					<span class="dot" ng-show="$root.uid == photo.uid">·</span>
+
+					<!-- Gives user ability to share photo-->
+					<span class="share" ng-show="$root.uid == photo.uid"> <a
+						href="" class="shareButton" ng-click="share = !share"> Share </a>
+					</span> <span class="shareSpan" ng-show="share"> <input
+						id="shareInput" class="form-control" type="text"
+						placeholder="Share with user"
+						ng-keypress="change($event, 'share', shareModel)"
+						ng-change="peopleSearch()" ng-model="shareModel">
+						<ul class="dropdown-menu sharePeople"
+							ng-show="peopleList.length > 0">
+							<li ng-click="shareClick($index)"
+								ng-repeat="person in peopleList"><a href=""
+								ng-bind-html="person.name"></a></li>
+						</ul>
+					</span>
+
+					<!-- Creates dot divider-->
+					<span class="dot" ng-show="$root.uid == photo.uid">·</span>
+
+					<!-- Allows user to edit meta data-->
+					<span ng-show="$root.uid == photo.uid"> <a href=""
+						class="fullEditButton" ng-show="!edit" ng-click="edit = !edit">Edit</a>
+						<a href="" class="doneEditButton" ng-show="edit"
+						ng-click="editMeta();">Done Editing</a> <span ng-show="edit"
+						class="dot">·</span> <a href="" class="cancelEditButton"
+						ng-show="edit" ng-click="edit = !edit">Cancel Editing</a>
+					</span>
+				</div>
+
+				<!-- Creates a divider before comments -->
+				<hr id="divider">
+
+				<!-- Comments container -->
+				<div id="commentBox" class="media-list">
+					<div id="comment" class="media" ng-repeat="comment in comments">
+
+						<!-- Comment (user) Avatar -->
+						<div class="media-left media-top">
+							<a href="#/profile/{{comment.uid}}"> <img
+								class="media-object userPhoto" ng-src="{{comment.profileImg}}">
+							</a>
+						</div>
+
+						<!-- Shows the delete and edit comment buttons when comments are hovered over -->
+						<div class="media-body" ng-mouseover="comment.hovered = true"
+							ng-mouseleave="comment.hovered = false">
+							<div class="media-heading">
+
+								<!-- Displays the name of the comment's author -->
+								<a href="#/profile/{{comment.uid}}"> {{comment.author}} </a>
+
+								<!-- Displays the delete, edit, and cancel comment buttons -->
+								<span class="commentButtons"
+									ng-show="!comment.loading && $root.uid == comment.uid">
+									<a href="" id="edit" class="editCommentButton"
+									ng-show="!comment.edit"
+									ng-click="comment.edit = !comment.edit; $parent.add = !$parent.add; log($parent.add);">
+										<span class="glyphicon glyphicon-edit"></span>
+								</a> <a href="" class="deleteCommentButton" ng-show="!comment.edit"
+									ng-click="deleteComment(comment.cid)"> <span
+										class="glyphicon glyphicon-trash"></span>
+								</a> <a href="" class="cancelEditComment" ng-show="comment.edit">
+										<span class="glyphicon glyphicon-remove"></span>
+								</a>
+								</span> <span ng-show="comment.success && !comment.loading"> <span
+									class="glyphicon glyphicon-ok-sign"></span>
+								</span> <span ng-show="comment.failure && !comment.loading"> <span
+									class="glyphicon glyphicon-exclamation-sign"></span>
+								</span> <span ng-show="comment.loading"> <span
+									class="glyphicon glyphicon-refresh spin"></span>
+								</span>
+
+								<!-- Displays comment -->
+								<h5 ng-show="!comment.edit">{{comment.content}}</h5>
+
+								<div>
+									<!-- This form allows user to hit enter to submit comment -->
+									<form>
+
+										<!-- Displays the "Edit comment" box -->
+										<div class="commentEditField" ng-show="comment.edit">
+											<textarea id="editText{{comment.cid}}"
+												class="commentTextField form-control"
+												ng-keypress="change($event, 'edit', comment.content, comment.cid, comment)"
+												ng-model="comment.content"></textarea>
+										</div>
+
+									</form>
+								</div>
+
+								<!-- Displays the date the comment was published -->
+								<h5 class="date">{{comment.date}}</h5>
+
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="addCommentBox">
+
+					<!-- This form allows user to hit enter to submit comment -->
+					<form>
+
+						<!-- Displays the "Add comment" box -->
+						<div class="input-group stylish-input-group">
+							<textarea id="commentText" class="form-control"
+								placeholder="Add comment"
+								ng-keypress="change($event, 'comment', content)"
+								ng-model="content"></textarea>
+							<span class="input-group-addon">
+								<button id="commentButton" type="submit" ng-click="addComment()">
+									<span class="glyphicon glyphicon-plus"></span>
+								</button>
+							</span>
+						</div>
+
+					</form>
+
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
